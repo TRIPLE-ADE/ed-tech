@@ -24,7 +24,10 @@ const FileUpload: React.FC<FileUploadAreaProps> = ({
           className="absolute inset-0 opacity-0 cursor-pointer"
         />
         <FileUp className="h-8 w-8 mb-2 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground text-center">
+        <p
+          className="text-sm text-muted-foreground text-center truncate block"
+          style={{ maxWidth: "calc(100% - 3rem)" }}
+        >
           {files.length > 0 ? (
             <span className="font-medium text-foreground">{files[0].name}</span>
           ) : (
@@ -34,12 +37,10 @@ const FileUpload: React.FC<FileUploadAreaProps> = ({
       </div>
       {files.length > 0 && (
         <div className="flex items-center justify-between p-4 bg-green-100 dark:bg-green-900 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
-            <span className="font-medium text-green-800 dark:text-green-200">
-              {files[0].name}
-            </span>
-          </div>
+          <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <span className="font-medium text-green-800 dark:text-green-200 w-3/4 block truncate">
+            {files[0].name}
+          </span>
           <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
         </div>
       )}

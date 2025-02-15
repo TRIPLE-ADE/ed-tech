@@ -129,7 +129,7 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
               disabled={disabled}
             />
             <p className="text-xs text-muted-foreground">
-              If left empty, 5 questions will be generated.
+              Maximum of 20 questions can be generated. If empty, 5 questions will be generated.
             </p>
           </div>
         </div>

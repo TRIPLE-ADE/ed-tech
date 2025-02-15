@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { encodeFileAsBase64 } from "@/utils/fileEncoder";
 
@@ -6,6 +6,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export const useFileHandler = () => {
   const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   /**
    * Handle file selection from an input event.
@@ -21,6 +22,10 @@ export const useFileHandler = () => {
     } else if (validFiles.length > 0) {
       toast.success("PDF file uploaded successfully");
       setFiles(validFiles);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
 
   };
@@ -45,5 +50,5 @@ export const useFileHandler = () => {
     );
   };
 
-  return { files, handleFileChange, clearFiles, getEncodedFiles };
+  return { files, handleFileChange, clearFiles, getEncodedFiles, fileInputRef  };
 };

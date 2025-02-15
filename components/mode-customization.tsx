@@ -12,8 +12,8 @@ interface ModeCustomizationProps {
   setQuestionType: (type: QuestionType) => void;
   difficulty: DifficultyLevel;
   setDifficulty: (level: DifficultyLevel) => void;
-  questionCount: number;
-  setQuestionCount: (count: number) => void;
+  questionCount: number | "";
+  setQuestionCount: (count: number | "") => void;
 }
 
 const ModeCustomization: React.FC<ModeCustomizationProps> = ({
@@ -26,6 +26,27 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
   questionCount,
   setQuestionCount,
 }) => {
+
+  const handleFocus = () => {
+    // If the current value is 0, clear the input.
+    if (questionCount === 0) {
+      setQuestionCount("");
+    }
+  };
+
+  const handleBlur = () => {
+    // If the input is left empty, default to 5.
+    if (questionCount === "") {
+      setQuestionCount(5);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Convert to number only if not empty.
+    setQuestionCount(value === "" ? "" : Number(value));
+  };
+
   return (
     <>
       {/* Mode Selection */}
@@ -97,8 +118,13 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
               value={questionCount}
               min={1}
               max={20}
-              onChange={(e) => setQuestionCount(Number(e.target.value))}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onChange={handleChange}
             />
+            <p className="text-xs text-muted-foreground">
+              If left empty, 5 questions will be generated.
+            </p>
           </div>
         </div>
       )}

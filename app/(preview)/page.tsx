@@ -36,9 +36,10 @@ export default function ChatWithFiles() {
   const [questionType, setQuestionType] =
     useState<QuestionType>("Multiple Choice");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("Medium");
-  const [questionCount, setQuestionCount] = useState(5);
+  // const [questionCount, setQuestionCount] = useState(5);
+  const [questionCount, setQuestionCount] = useState<number | "">(5);
 
-  const { files, handleFileChange, clearFiles, getEncodedFiles } =
+  const { files, handleFileChange, clearFiles, getEncodedFiles, fileInputRef  } =
     useFileHandler();
   const { isDragging, handleDragOver, handleDragLeave, handleDrop } =
     useDragAndDrop((files: FileList) =>
@@ -99,9 +100,9 @@ export default function ChatWithFiles() {
   };
 
   const progress = useMemo(() => {
-    return partialQuestions
-      ? (partialQuestions.length / questionCount) * 100
-      : 0;
+    // If questionCount is empty, default to 5.
+    const count = questionCount === "" ? 5 : questionCount;
+    return partialQuestions ? (partialQuestions.length / count) * 100 : 0;
   }, [partialQuestions, questionCount]);
 
   if (summary) {
@@ -142,7 +143,7 @@ export default function ChatWithFiles() {
         <WorkflowSteps />
         <CardContent>
           <form onSubmit={handleSubmitWithFiles} className="space-y-4">
-            <FileUpload files={files} handleFileChange={handleFileChange} />
+            <FileUpload files={files} handleFileChange={handleFileChange} fileInputRef={fileInputRef } />
             {/* Mode Selection */}
             <ModeCustomization
               mode={mode}

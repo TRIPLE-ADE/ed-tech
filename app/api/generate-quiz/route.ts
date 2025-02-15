@@ -3,6 +3,7 @@ import { google } from "@ai-sdk/google";
 import { streamObject } from "ai";
 
 export const maxDuration = 60;
+export const runtime = 'edge'
 
 export async function POST(req: Request) {
   const { files, questionCount, difficulty, questionType } = await req.json();
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     output: "array",
     onFinish: ({ object }) => {
       const res = questionsSchema.safeParse(object);
-      console.log("Test 2")
+      console.log(object)
       if (res.error) {
         throw new Error(res.error.errors.map((e) => e.message).join("\n"));
       }

@@ -6,11 +6,13 @@ import { FileUp, FileText, CheckCircle2 } from "lucide-react";
 export interface FileUploadAreaProps {
   files: File[];
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileInputRef : React.RefObject<HTMLInputElement | null>;
 }
 
 const FileUpload: React.FC<FileUploadAreaProps> = ({
   files,
   handleFileChange,
+  fileInputRef 
 }) => {
   return (
     <>
@@ -20,6 +22,7 @@ const FileUpload: React.FC<FileUploadAreaProps> = ({
         <input
           type="file"
           onChange={handleFileChange}
+          ref={fileInputRef}
           accept="application/pdf"
           className="absolute inset-0 opacity-0 cursor-pointer"
         />

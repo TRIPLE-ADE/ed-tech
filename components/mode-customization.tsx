@@ -14,6 +14,7 @@ interface ModeCustomizationProps {
   setDifficulty: (level: DifficultyLevel) => void;
   questionCount: number | "";
   setQuestionCount: (count: number | "") => void;
+  disabled: boolean;
 }
 
 const ModeCustomization: React.FC<ModeCustomizationProps> = ({
@@ -25,8 +26,8 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
   setDifficulty,
   questionCount,
   setQuestionCount,
+  disabled,
 }) => {
-
   const handleFocus = () => {
     // If the current value is 0, clear the input.
     if (questionCount === 0) {
@@ -58,6 +59,7 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
             variant={mode === "quiz" ? "default" : "outline"}
             onClick={() => setMode("quiz")}
             className="w-1/2"
+            disabled={disabled}
           >
             Generate Quiz
           </Button>
@@ -66,6 +68,7 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
             variant={mode === "summary" ? "default" : "outline"}
             onClick={() => setMode("summary")}
             className="w-1/2"
+            disabled={disabled}
           >
             Summarize PDF
           </Button>
@@ -85,6 +88,7 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
                   type="button"
                   variant={questionType === type ? "default" : "outline"}
                   onClick={() => setQuestionType(type as QuestionType)}
+                  disabled={disabled}
                 >
                   {type}
                 </Button>
@@ -102,6 +106,7 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
                   type="button"
                   variant={difficulty === level ? "default" : "outline"}
                   onClick={() => setDifficulty(level as DifficultyLevel)}
+                  disabled={disabled}
                 >
                   {level}
                 </Button>
@@ -121,6 +126,7 @@ const ModeCustomization: React.FC<ModeCustomizationProps> = ({
               onFocus={handleFocus}
               onBlur={handleBlur}
               onChange={handleChange}
+              disabled={disabled}
             />
             <p className="text-xs text-muted-foreground">
               If left empty, 5 questions will be generated.

@@ -64,7 +64,7 @@ export default function ChatWithFiles() {
     schema: questionsSchema,
     initialValue: undefined,
     onError: (error) => {
-      toast.error("Failed to generate quiz. Please try again.");
+      toast.error("Failed to generate quiz. Please try again."+error);
       clearFiles();
     },
     onFinish: ({ object, error }) => {
@@ -154,6 +154,7 @@ export default function ChatWithFiles() {
               setDifficulty={setDifficulty}
               questionCount={questionCount}
               setQuestionCount={setQuestionCount}
+              disabled={isLoading || isSummarizing}
             />
             {isLoading && (
               <div className="flex flex-col space-y-4">
@@ -187,7 +188,7 @@ export default function ChatWithFiles() {
             <Button
               type="submit"
               className="w-full"
-              disabled={files.length === 0 || !mode}
+              disabled={files.length === 0 || !mode || isLoading || isSummarizing}
             >
               {isLoading || isSummarizing ? (
                 <span className="flex items-center space-x-2">

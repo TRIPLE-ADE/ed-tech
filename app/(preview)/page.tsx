@@ -36,7 +36,6 @@ export default function ChatWithFiles() {
   const [questionType, setQuestionType] =
     useState<QuestionType>("Multiple Choice");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("Medium");
-  // const [questionCount, setQuestionCount] = useState(5);
   const [questionCount, setQuestionCount] = useState<number | "">(5);
 
   const { files, handleFileChange, clearFiles, getEncodedFiles, fileInputRef  } =

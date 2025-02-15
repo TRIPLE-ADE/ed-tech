@@ -31,23 +31,23 @@ export async function POST(req: Request) {
     ],
   });
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      const encoder = new TextEncoder()
-      for await (const chunk of result.textStream) {
-        const words = chunk.split(" ")
-        for (const word of words) {
-          controller.enqueue(encoder.encode(word + " "))
-          await new Promise((resolve) => setTimeout(resolve, 50)) // Delay between words
-        }
-      }
-      controller.close()
-    },
-  })
+  // const stream = new ReadableStream({
+  //   async start(controller) {
+  //     const encoder = new TextEncoder()
+  //     for await (const chunk of result.textStream) {
+  //       const words = chunk.split(" ")
+  //       for (const word of words) {
+  //         controller.enqueue(encoder.encode(word + " "))
+  //         await new Promise((resolve) => setTimeout(resolve, 50)) // Delay between words
+  //       }
+  //     }
+  //     controller.close()
+  //   },
+  // })
 
-  return new Response(stream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-  })
+  // return new Response(stream, {
+  //   headers: { "Content-Type": "text/plain; charset=utf-8" },
+  // })
 
   return result.toTextStreamResponse();
 }

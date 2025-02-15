@@ -18,10 +18,11 @@ export const useFileHandler = () => {
 
     if (validFiles.length !== selectedFiles.length) {
       toast.error("Only PDF files under 5MB are allowed.");
+    } else if (validFiles.length > 0) {
+      toast.success("PDF file uploaded successfully");
+      setFiles(validFiles);
     }
 
-    setFiles(validFiles);
-    toast.success("PDF file uploaded successfully");
   };
 
   /**

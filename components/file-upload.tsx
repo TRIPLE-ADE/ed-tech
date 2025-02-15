@@ -35,7 +35,7 @@ const FileUpload: React.FC<FileUploadAreaProps> = ({
             <span className="font-medium text-foreground">{files[0].name}</span>
           ) : (
             <>
-              <span>Drag & drop a PDF file here, or click to select.</span>
+              <span className="block">Drag & drop a PDF file here, or click to select.</span>
               <span>Max file size: 2MB</span>
             </>
           )}

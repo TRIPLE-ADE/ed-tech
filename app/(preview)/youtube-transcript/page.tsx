@@ -182,7 +182,7 @@ export default function YouTubeTranscriptPage() {
         {transcript && (
           <Button
             onClick={handleSummarize}
-            disabled={isSummarizing}
+            disabled={isSummarizing || isLoading}
             className="mt-4 w-full"
           >
             {isSummarizing ? (

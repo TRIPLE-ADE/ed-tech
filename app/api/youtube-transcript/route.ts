@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { YoutubeTranscript } from "youtube-transcript";
 
 export async function POST(req: Request) {
   try {

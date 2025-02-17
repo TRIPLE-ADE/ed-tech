@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist } from "next/font/google";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Header from "@/components/layout/header";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -22,10 +23,8 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" enableSystem defaultTheme="system">
           <Toaster position="top-center" richColors />
-          <div className="fixed top-4 right-4 z-50">
-            <ThemeToggle />
-          </div>
-          {children}
+            <Header />
+            {children}
         </ThemeProvider>
       </body>
     </html>

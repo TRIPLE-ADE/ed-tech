@@ -27,7 +27,7 @@ const Header = () => {
             href="/dashboard"
             className="transition-colors hover:text-foreground/80 text-foreground/60"
           >
-            Dashboard
+            PDF Assistant
           </Link>
           <Link
             href="/youtube-transcript"

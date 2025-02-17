@@ -3,8 +3,7 @@ import { Metadata } from "next";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist } from "next/font/google";
-import { ThemeToggle } from "@/components/theme-toggle";
-import Header from "@/components/layout/header";
+import { Header, Footer } from "@/components/layout";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -23,8 +22,9 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" enableSystem defaultTheme="system">
           <Toaster position="top-center" richColors />
-            <Header />
-            {children}
+          <Header />
+          {children}
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

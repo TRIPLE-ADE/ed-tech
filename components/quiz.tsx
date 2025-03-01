@@ -55,7 +55,7 @@ const QuestionCard: React.FC<{
             <span className="text-lg font-medium mr-4 shrink-0">
               {answerLabels[index]}
             </span>
-            <span className="flex-grow">{option}</span>
+            <span className="grow">{option}</span>
             {(showCorrectAnswer && answerLabels[index] === question.answer) ||
               (selectedAnswer === answerLabels[index] && (
                 <Check className="ml-2 shrink-0 text-white" size={20} />

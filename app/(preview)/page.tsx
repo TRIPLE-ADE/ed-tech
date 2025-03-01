@@ -29,7 +29,7 @@ export default function Home() {
     <main>
       <div className="flex flex-col container mx-auto items-center justify-center min-h-screen py-2 my-20">
         <section className="text-center mb-16 px-4">
-          <p className="rounded-full w-fit mx-auto mb-4 border bg-background/95 px-4 py-2 text-sm shadow-sm backdrop-blur flex items-center justify-center gap-2">
+          <p className="rounded-full w-fit mx-auto mb-4 border bg-background/95 px-4 py-2 text-sm shadow-xs backdrop-blur-sm flex items-center justify-center gap-2">
             <Sparkles className="h-4 w-4" />
             <span>Introducing AI-Powered Learning Tools for Everyone</span>
           </p>

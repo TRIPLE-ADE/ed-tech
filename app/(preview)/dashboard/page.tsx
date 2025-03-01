@@ -38,7 +38,7 @@ export default function ChatWithFiles() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("Medium");
   const [questionCount, setQuestionCount] = useState<number | "">(5);
 
-  const { files, handleFileChange, clearFiles, getEncodedFiles, fileInputRef  } =
+  const { files, handleFileChange, clearFiles, getEncodedFiles, fileInputRef } =
     useFileHandler();
   const { isDragging, handleDragOver, handleDragLeave, handleDrop } =
     useDragAndDrop((files: FileList) =>
@@ -63,7 +63,7 @@ export default function ChatWithFiles() {
     schema: questionsSchema,
     initialValue: undefined,
     onError: (error) => {
-      toast.error("Failed to generate quiz. Please try again."+error);
+      toast.error("Failed to generate quiz. Please try again." + error);
       clearFiles();
     },
     onFinish: ({ object, error }) => {
@@ -142,7 +142,11 @@ export default function ChatWithFiles() {
         <WorkflowSteps />
         <CardContent>
           <form onSubmit={handleSubmitWithFiles} className="space-y-4">
-            <FileUpload files={files} handleFileChange={handleFileChange} fileInputRef={fileInputRef } />
+            <FileUpload
+              files={files}
+              handleFileChange={handleFileChange}
+              fileInputRef={fileInputRef}
+            />
             {/* Mode Selection */}
             <ModeCustomization
               mode={mode}
@@ -155,6 +159,9 @@ export default function ChatWithFiles() {
               setQuestionCount={setQuestionCount}
               disabled={isLoading || isSummarizing}
             />
+            {/* {files.length > 0 && (
+              <PreviewPdf files={files} />
+            )} */}
             {isLoading && (
               <div className="flex flex-col space-y-4">
                 <div className="w-full space-y-1">
@@ -187,7 +194,9 @@ export default function ChatWithFiles() {
             <Button
               type="submit"
               className="w-full"
-              disabled={files.length === 0 || !mode || isLoading || isSummarizing}
+              disabled={
+                files.length === 0 || !mode || isLoading || isSummarizing
+              }
             >
               {isLoading || isSummarizing ? (
                 <span className="flex items-center space-x-2">

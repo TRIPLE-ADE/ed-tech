@@ -22,16 +22,31 @@ const Header = () => {
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <span className="font-neue text-2xl font-bold">ThryX</span>
         </Link>
-        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+        <nav
+          aria-label="Main navigation"
+          className="hidden md:flex items-center space-x-6 text-sm font-medium"
+        >
           <Link
             href="/dashboard"
             className="transition-colors hover:text-foreground/80 text-foreground/60"
+            aria-current={
+              typeof window !== "undefined" &&
+              window.location.pathname === "/dashboard"
+                ? "page"
+                : undefined
+            }
           >
             PDF Assistant
           </Link>
           <Link
             href="/youtube-transcript"
             className="transition-colors hover:text-foreground/80 text-foreground/60"
+            aria-current={
+              typeof window !== "undefined" &&
+              window.location.pathname === "/youtube-transcript"
+                ? "page"
+                : undefined
+            }
           >
             YouTube Assistant
           </Link>
@@ -45,6 +60,8 @@ const Header = () => {
               className="relative z-50"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isOpen}
+              aria-controls="mobile-menu"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -55,9 +72,9 @@ const Header = () => {
                   transition={{ duration: 0.2, ease: "easeInOut" }}
                 >
                   {isOpen ? (
-                    <X className="h-6 w-6" />
+                    <X className="h-6 w-6" aria-hidden="true" />
                   ) : (
-                    <Menu className="h-6 w-6" />
+                    <Menu className="h-6 w-6" aria-hidden="true" />
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -65,6 +82,9 @@ const Header = () => {
             <AnimatePresence>
               {isOpen && (
                 <motion.div
+                  id="mobile-menu"
+                  role="navigation"
+                  aria-label="Mobile navigation"
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -78,6 +98,12 @@ const Header = () => {
                         href={item.href}
                         className="text-lg font-medium hover:text-primary transition-colors"
                         onClick={() => setIsOpen(false)}
+                        aria-current={
+                          typeof window !== "undefined" &&
+                          window.location.pathname === item.href
+                            ? "page"
+                            : undefined
+                        }
                       >
                         {item.label}
                       </Link>
@@ -87,9 +113,6 @@ const Header = () => {
               )}
             </AnimatePresence>
           </div>
-          {/* <Button asChild>
-            <Link href="/login">Login</Link>
-          </Button> */}
         </div>
       </div>
     </header>

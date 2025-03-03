@@ -20,7 +20,7 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto px-4 flex h-14 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <span className="font-bold">EdTech AI</span>
+          <span className="font-neue text-2xl font-bold">ThryX</span>
         </Link>
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
           <Link
@@ -36,7 +36,7 @@ const Header = () => {
             YouTube Assistant
           </Link>
         </nav>
-        <div className="ml-auto flex items-center space-x-4">
+        <div className="ml-auto flex items-center space-x-4 md:space-x-0">
           <ThemeToggle />
           <div className="md:hidden">
             <Button

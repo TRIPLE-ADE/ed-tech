@@ -34,11 +34,11 @@ export default function Home() {
             <span>Introducing AI-Powered Learning Tools for Everyone</span>
           </p>
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl mb-6">
+            <h1 className="text-6xl font-neue font-bold tracking-tight sm:text-5xl md:text-7xl lg:text-9xl mb-6">
               Transform the Way You Learn with AI
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Unlock your full potential with EdTech AI. Our cutting-edge AI
+              Unlock your full potential with ThryX AI. Our cutting-edge AI
               tools transform the way you study, learn, and retain information.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

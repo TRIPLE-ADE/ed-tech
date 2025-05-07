@@ -40,6 +40,7 @@ export default function ChatWithFiles() {
 
   const { files, handleFileChange, clearFiles, getEncodedFiles, fileInputRef } =
     useFileHandler();
+
   const { isDragging, handleDragOver, handleDragLeave, handleDrop } =
     useDragAndDrop((files: FileList) =>
       handleFileChange({
@@ -80,6 +81,8 @@ export default function ChatWithFiles() {
   const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const encodedFiles = await getEncodedFiles();
+
+    console.log("Encoded files:", encodedFiles);
 
     if (mode === "quiz") {
       submit({ files: encodedFiles, questionType, questionCount, difficulty });

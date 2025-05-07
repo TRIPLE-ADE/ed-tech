@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { encodeFileAsBase64 } from "@/utils/fileEncoder";
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 2MB
 
 export const useFileHandler = () => {
   const [files, setFiles] = useState<File[]>([]);

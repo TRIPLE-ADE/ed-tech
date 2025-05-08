@@ -37,8 +37,10 @@ export default function ChatWithFiles() {
     useState<QuestionType>("Multiple Choice");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("Medium");
   const [questionCount, setQuestionCount] = useState<number | "">(5);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  const { files, handleFileChange, clearFiles, getEncodedFiles, fileInputRef } =
+  const { files, handleFileChange, clearFiles, getFiles, fileInputRef } =
     useFileHandler();
 
   const { isDragging, handleDragOver, handleDragLeave, handleDrop } =
@@ -47,6 +49,7 @@ export default function ChatWithFiles() {
         target: { files },
       } as React.ChangeEvent<HTMLInputElement>)
     );
+  
   const {
     summary,
     isSummarizing,
@@ -55,41 +58,61 @@ export default function ChatWithFiles() {
     cancelSummarizing,
   } = useSummarizer();
 
-  const {
-    submit,
-    object: partialQuestions,
-    isLoading,
-  } = experimental_useObject({
-    api: "/api/generate-quiz",
-    schema: questionsSchema,
-    initialValue: undefined,
-    onError: (error) => {
-      toast.error("Failed to generate quiz. Please try again." + error);
-      clearFiles();
-    },
-    onFinish: ({ object, error }) => {
-      if (error) {
-        console.error("Error generating quiz:", error);
-        toast.error("Failed to generate quiz. Please try again." + error);
-        clearFiles();
-        return;
-      }
-      setQuestions(object ?? []);
-    },
-  });
-
   const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const encodedFiles = await getEncodedFiles();
-
-    console.log("Encoded files:", encodedFiles);
-
-    if (mode === "quiz") {
-      submit({ files: encodedFiles, questionType, questionCount, difficulty });
-      const generatedTitle = await generateQuizTitle(encodedFiles[0].name);
-      setTitle(generatedTitle);
-    } else if (mode === "summary") {
-      summarizeFiles(encodedFiles);
+    setIsSubmitting(true);
+    
+    try {
+      if (files.length === 0) {
+        toast.error("Please upload a PDF file first");
+        return;
+      }
+      
+      if (mode === "quiz") {
+        // Generate a title for the quiz
+        const generatedTitle = await generateQuizTitle(files[0].name);
+        setTitle(generatedTitle);
+        
+        // Create a FormData object to send the file directly
+        const formData = new FormData();
+        formData.append("file", files[0]);
+        formData.append("questionCount", questionCount.toString());
+        formData.append("difficulty", difficulty);
+        formData.append("questionType", questionType);
+        
+        // Track progress with a simple incrementing counter
+        const progressInterval = setInterval(() => {
+          setProgress(prev => {
+            const newProgress = prev + 2;
+            return newProgress >= 95 ? 95 : newProgress;
+          });
+        }, 500);
+        
+        // Send the request
+        const response = await fetch("/api/generate-quiz", {
+          method: "POST",
+          body: formData,
+        });
+        
+        clearInterval(progressInterval);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to generate quiz");
+        }
+        
+        const data = await response.json();
+        setQuestions(data);
+        setProgress(100);
+      } 
+      else if (mode === "summary") {
+        summarizeFiles(files);
+      }
+    } catch (error) {
+      console.error("Error handling submission:", error);
+      toast.error(`Error: ${(error as Error).message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -99,13 +122,8 @@ export default function ChatWithFiles() {
     setQuestions([]);
     resetSummary();
     setMode(null);
+    setProgress(0);
   };
-
-  const progress = useMemo(() => {
-    // If questionCount is empty, default to 5.
-    const count = questionCount === "" ? 5 : questionCount;
-    return partialQuestions ? (partialQuestions.length / count) * 100 : 0;
-  }, [partialQuestions, questionCount]);
 
   if (summary) {
     return <Summary summary={summary} onClear={clearPDF} />;
@@ -160,12 +178,10 @@ export default function ChatWithFiles() {
               setDifficulty={setDifficulty}
               questionCount={questionCount}
               setQuestionCount={setQuestionCount}
-              disabled={isLoading || isSummarizing}
+              disabled={isSubmitting || isSummarizing}
             />
-            {/* {files.length > 0 && (
-              <PreviewPdf files={files} />
-            )} */}
-            {isLoading && (
+            
+            {isSubmitting && (
               <div className="flex flex-col space-y-4">
                 <div className="w-full space-y-1">
                   <div className="flex justify-between text-sm text-muted-foreground">
@@ -178,16 +194,14 @@ export default function ChatWithFiles() {
                   <div className="grid grid-cols-6 sm:grid-cols-4 items-center space-x-2 text-sm">
                     <div
                       className={`h-2 w-2 rounded-full ${
-                        isLoading
+                        isSubmitting
                           ? "bg-yellow-500/50 animate-pulse"
                           : "bg-muted"
                       }`}
                     />
                     <span className="text-muted-foreground text-center col-span-4 sm:col-span-2">
-                      {partialQuestions
-                        ? `Generating question ${
-                            partialQuestions.length + 1
-                          } of ${questionCount}`
+                      {progress > 0
+                        ? `Generating quiz...`
                         : "Analyzing PDF content"}
                     </span>
                   </div>
@@ -198,10 +212,10 @@ export default function ChatWithFiles() {
               type="submit"
               className="w-full"
               disabled={
-                files.length === 0 || !mode || isLoading || isSummarizing
+                files.length === 0 || !mode || isSubmitting || isSummarizing
               }
             >
-              {isLoading || isSummarizing ? (
+              {isSubmitting || isSummarizing ? (
                 <span className="flex items-center space-x-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>

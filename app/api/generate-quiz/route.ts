@@ -54,7 +54,7 @@ import { NextRequest } from "next/server";
 import { streamObject } from "ai";
 import { google } from "@ai-sdk/google";
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   // We need to handle multipart form data for file uploads

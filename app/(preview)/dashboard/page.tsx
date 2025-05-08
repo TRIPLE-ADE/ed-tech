@@ -105,9 +105,9 @@ export default function ChatWithFiles() {
         setQuestions(data);
         setProgress(100);
       } 
-      else if (mode === "summary") {
-        summarizeFiles(files);
-      }
+      // else if (mode === "summary") {
+      //   summarizeFiles(files);
+      // }
     } catch (error) {
       console.error("Error handling submission:", error);
       toast.error(`Error: ${(error as Error).message}`);

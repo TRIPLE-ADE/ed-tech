@@ -258,7 +258,8 @@ import FileUpload from "@/components/file-upload";
 import ModeCustomization from "@/components/mode-customization";
 
 // Custom Hooks
-import { useDragAndDrop, useFileHandler } from "@/hooks";
+import { useDragAndDrop } from "@/hooks";
+import { useFileHandler } from "@/hooks/useFileHandler";
 import { useSummarizer } from "@/hooks/useSummarizer";
 
 // Types
@@ -278,10 +279,9 @@ export default function ChatWithFiles() {
 
   const { 
     files, 
-    fileUris, 
+    uploadedFiles,
     handleFileChange, 
     clearFiles, 
-    uploadFilesToBackend,
     fileInputRef,
     isUploading 
   } = useFileHandler();
@@ -328,26 +328,28 @@ export default function ChatWithFiles() {
   const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    // Check if we have files and that the number of files matches the number of uploaded files
     if (files.length === 0) {
       toast.error("Please select a file first");
+      return;
+    }
+    
+    if (uploadedFiles.length === 0) {
+      toast.error("No files have been successfully uploaded");
+      return;
+    }
+    
+    if (files.length !== uploadedFiles.length) {
+      toast.error("Not all files were successfully uploaded. Please try again.");
       return;
     }
     
     setIsProcessing(true);
     
     try {
-      // Step 1: Upload files to custom backend which uses Google Files API
-      const uploadedFiles = await uploadFilesToBackend();
-      
-      if (uploadedFiles.length === 0) {
-        throw new Error("No files were uploaded successfully");
-      }
-
-      console.log("Uploaded files:", uploadedFiles);
-      
-      // Step 2: Process the files based on selected mode
+      // Process the files based on selected mode
       if (mode === "quiz") {
-        // Use the first file's URI for the quiz generation
+        // Use the first file's metadata for the quiz generation
         submit({ 
           fileMetadata: uploadedFiles[0],
           questionType, 
@@ -358,12 +360,12 @@ export default function ChatWithFiles() {
         const generatedTitle = await generateQuizTitle(uploadedFiles[0].name);
         setTitle(generatedTitle);
       } else if (mode === "summary") {
-        // Pass the file URIs to your summarizer
+        // Pass the uploaded files to your summarizer
         // summarizeFiles(uploadedFiles);
       }
     } catch (error) {
       console.error("Error processing files:", error);
-      toast.error("Failed to process files");
+      toast.error(`Failed to process files: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsProcessing(false);
     }
   };

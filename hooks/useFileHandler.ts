@@ -129,12 +129,67 @@ export const useFileHandler = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [fileUris, setFileUris] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<{name: string, uri: string, mimeType: string}[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /**
-   * Handle file selection from an input event.
+   * Upload a file to the backend immediately after selection
    */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFileToBackend = async (file: File) => {
+    setIsUploading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Show toast for upload start
+      const toastId = toast.loading(`Uploading ${file.name}...`);
+      
+      const response = await fetch('http://localhost:3000/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Validate the response has the expected structure
+      if (!data.metadata?.uri) {
+        throw new Error('Invalid response format from server');
+      }
+      
+      const fileMetadata = {
+        name: file.name,
+        uri: data.metadata.uri,
+        mimeType: file.type
+      };
+      
+      setFileUris(prev => [...prev, fileMetadata.uri]);
+      setUploadedFiles(prev => [...prev, fileMetadata]);
+      
+      // Update toast to show success
+      toast.success(`${file.name} uploaded successfully`, {
+        id: toastId
+      });
+      
+      return fileMetadata;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  /**
+   * Handle file selection from an input event.
+   * Now also uploads the file immediately.
+   */
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const validFiles = selectedFiles.filter(
       (file) => file.type === "application/pdf" && file.size <= MAX_FILE_SIZE
@@ -143,56 +198,30 @@ export const useFileHandler = () => {
     if (validFiles.length !== selectedFiles.length) {
       toast.error(`Only PDF files under ${MAX_FILE_SIZE / (1024 * 1024)}MB are allowed.`);
     } else if (validFiles.length > 0) {
-      toast.success("PDF file selected successfully");
-      setFiles(validFiles);
+      toast.success("PDF file selected");
+      
+      // Only add successfully uploaded files
+      const successfullyUploadedFiles: File[] = [];
+      
+      // Upload each file immediately
+      for (const file of validFiles) {
+        try {
+          await uploadFileToBackend(file);
+          successfullyUploadedFiles.push(file);
+        } catch (error) {
+          // Error is already handled in uploadFileToBackend
+          console.error("File upload failed:", file.name);
+        }
+      }
+      
+      // Only set files that were successfully uploaded
+      if (successfullyUploadedFiles.length > 0) {
+        setFiles(successfullyUploadedFiles);
+      }
     }
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
-    }
-  };
-
-  /**
-   * Upload files to the custom backend and get back Google File URIs
-   */
-  const uploadFilesToBackend = async (): Promise<{name: string, uri: string, mimeType: string}[]> => {
-    setIsUploading(true);
-    
-    try {
-      const uploadResults = await Promise.all(
-        files.map(async (file) => {
-          const formData = new FormData();
-          formData.append('file', file);
-          
-          const response = await fetch('http://localhost:3000/upload', {
-            method: 'POST',
-            body: formData,
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Upload failed: ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          return {
-            name: file.name,
-            uri: data.metadata.uri,
-            mimeType: file.type
-          };
-        })
-      );
-      
-      const uris = uploadResults.map(result => result.uri);
-      setFileUris(uris);
-      
-      toast.success("Files uploaded to Google successfully");
-      return uploadResults;
-    } catch (error) {
-      console.error("Error uploading files:", error);
-      toast.error("Failed to upload files to server");
-      throw error;
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -202,14 +231,15 @@ export const useFileHandler = () => {
   const clearFiles = () => {
     setFiles([]);
     setFileUris([]);
+    setUploadedFiles([]);
   };
 
   return { 
     files, 
     fileUris, 
+    uploadedFiles,
     handleFileChange, 
     clearFiles, 
-    uploadFilesToBackend, 
     fileInputRef,
     isUploading
   };

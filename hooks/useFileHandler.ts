@@ -54,15 +54,82 @@
 // };
 
 
+// import { useRef, useState } from "react";
+// import { toast } from "sonner";
+
+// export const useFileHandler = () => {
+
+//   const [files, setFiles] = useState<File[]>([]);
+//   const fileInputRef = useRef<HTMLInputElement>(null);
+
+//   // Increase max file size to 30MB
+//   const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
+
+//   /**
+//    * Handle file selection from an input event.
+//    */
+//   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const selectedFiles = Array.from(e.target.files || []);
+//     const validFiles = selectedFiles.filter(
+//       (file) => file.type === "application/pdf" && file.size <= MAX_FILE_SIZE
+//     );
+
+//     if (validFiles.length !== selectedFiles.length) {
+//       // Check which constraint failed
+//       const oversizedFiles = selectedFiles.filter(file => file.type === "application/pdf" && file.size > MAX_FILE_SIZE);
+//       const nonPdfFiles = selectedFiles.filter(file => file.type !== "application/pdf");
+      
+//       if (oversizedFiles.length > 0) {
+//         toast.error(`Files must be under 30MB. Found ${oversizedFiles.length} oversized files.`);
+//       }
+      
+//       if (nonPdfFiles.length > 0) {
+//         toast.error(`Only PDF files are allowed. Found ${nonPdfFiles.length} non-PDF files.`);
+//       }
+//     } else if (validFiles.length > 0) {
+//       toast.success(`${validFiles.length} PDF file(s) uploaded successfully`);
+//       setFiles(validFiles);
+//     }
+
+//     if (fileInputRef.current) {
+//       fileInputRef.current.value = "";
+//     }
+//   };
+
+//   /**
+//    * Clear the current file selection.
+//    */
+//   const clearFiles = () => {
+//     setFiles([]);
+//   };
+
+//   /**
+//    * Get the selected files for submission.
+//    */
+//   const getFiles = () => {
+//     return files.map(file => ({
+//       name: file.name,
+//       type: file.type,
+//       file: file, // Return the actual File object
+//     }));
+//   };
+
+//   return { files, handleFileChange, clearFiles, getFiles, fileInputRef };
+// };
+
+
+// useFileHandler.ts - Modified to handle direct uploads to backend
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+// Increased to 30MB
+const MAX_FILE_SIZE = 30 * 1024 * 1024; 
+
 export const useFileHandler = () => {
   const [files, setFiles] = useState<File[]>([]);
+  const [fileUris, setFileUris] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Increase max file size to 30MB
-  const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 
   /**
    * Handle file selection from an input event.
@@ -74,19 +141,9 @@ export const useFileHandler = () => {
     );
 
     if (validFiles.length !== selectedFiles.length) {
-      // Check which constraint failed
-      const oversizedFiles = selectedFiles.filter(file => file.type === "application/pdf" && file.size > MAX_FILE_SIZE);
-      const nonPdfFiles = selectedFiles.filter(file => file.type !== "application/pdf");
-      
-      if (oversizedFiles.length > 0) {
-        toast.error(`Files must be under 30MB. Found ${oversizedFiles.length} oversized files.`);
-      }
-      
-      if (nonPdfFiles.length > 0) {
-        toast.error(`Only PDF files are allowed. Found ${nonPdfFiles.length} non-PDF files.`);
-      }
+      toast.error(`Only PDF files under ${MAX_FILE_SIZE / (1024 * 1024)}MB are allowed.`);
     } else if (validFiles.length > 0) {
-      toast.success(`${validFiles.length} PDF file(s) uploaded successfully`);
+      toast.success("PDF file selected successfully");
       setFiles(validFiles);
     }
 
@@ -96,22 +153,64 @@ export const useFileHandler = () => {
   };
 
   /**
+   * Upload files to the custom backend and get back Google File URIs
+   */
+  const uploadFilesToBackend = async (): Promise<{name: string, uri: string, mimeType: string}[]> => {
+    setIsUploading(true);
+    
+    try {
+      const uploadResults = await Promise.all(
+        files.map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch('http://localhost:3000/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          return {
+            name: file.name,
+            uri: data.metadata.uri,
+            mimeType: file.type
+          };
+        })
+      );
+      
+      const uris = uploadResults.map(result => result.uri);
+      setFileUris(uris);
+      
+      toast.success("Files uploaded to Google successfully");
+      return uploadResults;
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      toast.error("Failed to upload files to server");
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  /**
    * Clear the current file selection.
    */
   const clearFiles = () => {
     setFiles([]);
+    setFileUris([]);
   };
 
-  /**
-   * Get the selected files for submission.
-   */
-  const getFiles = () => {
-    return files.map(file => ({
-      name: file.name,
-      type: file.type,
-      file: file, // Return the actual File object
-    }));
+  return { 
+    files, 
+    fileUris, 
+    handleFileChange, 
+    clearFiles, 
+    uploadFilesToBackend, 
+    fileInputRef,
+    isUploading
   };
-
-  return { files, handleFileChange, clearFiles, getFiles, fileInputRef };
 };

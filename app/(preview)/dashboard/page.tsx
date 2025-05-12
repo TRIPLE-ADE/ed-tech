@@ -339,11 +339,6 @@ export default function ChatWithFiles() {
       return;
     }
     
-    if (files.length !== uploadedFiles.length) {
-      toast.error("Not all files were successfully uploaded. Please try again.");
-      return;
-    }
-    
     setIsProcessing(true);
     
     try {

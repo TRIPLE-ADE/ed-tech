@@ -342,9 +342,7 @@ export default function ChatWithFiles() {
     setIsProcessing(true);
     
     try {
-      // Process the files based on selected mode
       if (mode === "quiz") {
-        // Use the first file's metadata for the quiz generation
         submit({ 
           fileMetadata: uploadedFiles[0],
           questionType, 
@@ -355,8 +353,7 @@ export default function ChatWithFiles() {
         const generatedTitle = await generateQuizTitle(uploadedFiles[0].name);
         setTitle(generatedTitle);
       } else if (mode === "summary") {
-        // Pass the uploaded files to your summarizer
-        // summarizeFiles(uploadedFiles);
+        summarizeFiles(uploadedFiles[0]);
       }
     } catch (error) {
       console.error("Error processing files:", error);

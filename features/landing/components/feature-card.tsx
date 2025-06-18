@@ -1,6 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui';
+'use client'
 import { useState } from 'react';
 
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui';
 
 
 type Feature = {
@@ -9,7 +10,7 @@ type Feature = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-const FeatureCard = ({ feature }: { feature: Feature }) => {
+export const FeatureCard = ({ feature }: { feature: Feature }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -39,5 +40,3 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
     </Card>
   );
 };
-
-export default FeatureCard;

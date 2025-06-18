@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+'use client';
+import { useEffect, useState } from 'react';
 
 type StatCounterProps = {
   end: number;
@@ -7,7 +8,12 @@ type StatCounterProps = {
   suffix?: string;
 };
 
-const StatCounter = ({ end, label, prefix = "", suffix = "" }: StatCounterProps) => {
+export const StatCounter = ({
+  end,
+  label,
+  prefix = "",
+  suffix = "",
+}: StatCounterProps) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -31,13 +37,13 @@ const StatCounter = ({ end, label, prefix = "", suffix = "" }: StatCounterProps)
   }, [end]);
 
   return (
-    <div className="text-center">
-      <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-        {prefix}{count.toLocaleString()}{suffix}
+    <div className='text-center'>
+      <div className='text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2'>
+        {prefix}
+        {count.toLocaleString()}
+        {suffix}
       </div>
-      <div className="text-gray-600 dark:text-gray-400">{label}</div>
+      <div className='text-gray-600 dark:text-gray-400'>{label}</div>
     </div>
   );
 };
-
-export default StatCounter;

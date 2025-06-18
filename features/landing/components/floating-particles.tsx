@@ -1,6 +1,7 @@
+'use client'
 import { useEffect, useState } from "react";
 
-const FloatingParticles = () => {
+export const FloatingParticles = () => {
   type Particle = {
     id: number;
     x: number;
@@ -42,5 +43,3 @@ const FloatingParticles = () => {
     </div>
   );
 };
-
-export default FloatingParticles;

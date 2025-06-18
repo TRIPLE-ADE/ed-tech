@@ -30,7 +30,7 @@ export function ThemeToggle() {
       type="button"
     >
       <Sun 
-        className="h-5 w-5 text-muted-foreground transition-all dark:hidden" 
+        className="h-5 w-5 text-white transition-all dark:hidden" 
         aria-hidden="true"
       />
       <Moon 

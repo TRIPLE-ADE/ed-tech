@@ -3,7 +3,6 @@ import { Metadata } from "next";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist, Bebas_Neue } from "next/font/google";
-import { Header, Footer } from "@/components/layout";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -59,9 +58,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" enableSystem defaultTheme="system">
           <Toaster position="top-center" richColors />
-          <Header />
           {children}
-          <Footer />
         </ThemeProvider>
       </body>
     </html>

@@ -1,58 +1,61 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, Sparkles, X } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Button } from "../ui";
-import { ThemeToggle } from "../theme-toggle";
+import { ThemeToggle } from "../theme-toggle"; 
 
-const menuItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/youtube-transcript", label: "YouTube Assistant" },
+const navItems = [
+  { href: "#how-it-works", label: "How It Works" },
+  { href: "#features", label: "Features" },
+  { href: "#testimonials", label: "Testimonials" },
 ];
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname(); 
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60">
-      <div className="container mx-auto px-4 flex h-14 items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2">
-          <span className="font-neue text-2xl font-bold">ThryX</span>
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <Sparkles className="h-6 w-6 text-blue-500 dark:text-purple-400" />
+          ThryX AI
         </Link>
         <nav
           aria-label="Main navigation"
           className="hidden md:flex items-center space-x-6 text-sm font-medium"
         >
-          <Link
-            href="/dashboard"
-            className="transition-colors hover:text-foreground/80 text-foreground/60"
-            aria-current={
-              typeof window !== "undefined" &&
-              window.location.pathname === "/dashboard"
-                ? "page"
-                : undefined
-            }
-          >
-            PDF Assistant
-          </Link>
-          <Link
-            href="/youtube-transcript"
-            className="transition-colors hover:text-foreground/80 text-foreground/60"
-            aria-current={
-              typeof window !== "undefined" &&
-              window.location.pathname === "/youtube-transcript"
-                ? "page"
-                : undefined
-            }
-          >
-            YouTube Assistant
-          </Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`transition-colors hover:text-foreground/80 ${
+                pathname === item.href || (item.href.startsWith('#') && pathname === '/')
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-foreground/60 dark:text-foreground/40" 
+              }`}
+              aria-current={pathname === item.href ? "page" : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
-        <div className="ml-auto flex items-center space-x-4 md:space-x-0">
+
+        <div className="flex items-center space-x-4">
+          <Link href="/login">
+            <Button variant="ghost" className="hidden md:block">Sign In</Button>
+          </Link>
+          <Link href="/register">
+            <Button className="hidden md:block">Sign Up</Button>
+          </Link>
+          
           <ThemeToggle />
+
           <div className="md:hidden">
             <Button
               variant="ghost"
@@ -79,42 +82,48 @@ const Header = () => {
                 </motion.div>
               </AnimatePresence>
             </Button>
-            <AnimatePresence>
-              {isOpen && (
-                <motion.div
-                  id="mobile-menu"
-                  role="navigation"
-                  aria-label="Mobile navigation"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                  className="fixed inset-0 top-14 z-40 bg-background border-t"
-                >
-                  <nav className="container px-4 py-6 flex text-center flex-col space-y-4 bg-background border-b">
-                    {menuItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="text-lg font-medium hover:text-primary transition-colors"
-                        onClick={() => setIsOpen(false)}
-                        aria-current={
-                          typeof window !== "undefined" &&
-                          window.location.pathname === item.href
-                            ? "page"
-                            : undefined
-                        }
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </nav>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            id="mobile-menu"
+            role="navigation"
+            aria-label="Mobile navigation"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 top-16 z-40 bg-background border-t border-gray-200 dark:border-gray-700 md:hidden" // Adjusted top to match header height
+          >
+            <nav className="container px-4 py-6 flex flex-col space-y-4 bg-background">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`text-lg font-medium hover:text-primary transition-colors ${
+                    pathname === item.href ? "text-blue-600 dark:text-blue-400" : "text-foreground/80 dark:text-foreground/60"
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                  aria-current={pathname === item.href ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Link href="/login" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full">Sign In</Button>
+                </Link>
+                <Link href="/register" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full">Sign Up</Button>
+                </Link>
+              </div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

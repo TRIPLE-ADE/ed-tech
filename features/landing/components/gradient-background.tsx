@@ -1,4 +1,4 @@
-const GradientBackground = () => (
+export const GradientBackground = () => (
   <div className="absolute inset-0 -z-10">
     {/* Light mode gradients */}
     <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:hidden" />
@@ -13,5 +13,3 @@ const GradientBackground = () => (
     <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-900/30 rounded-full blur-3xl animate-pulse hidden dark:block" style={{ animationDelay: '4s' }} />
   </div>
 );
-
-export default GradientBackground;

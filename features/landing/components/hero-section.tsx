@@ -12,6 +12,7 @@ import { StatCounter } from '@/features/landing/components';
 export const Hero = () => {
     return (
         <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center px-4 pt-8 pb-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 dark:from-blue-600/5 dark:to-purple-600/5" />
             <div className="container mx-auto text-center relative z-10">
                 <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
                     <Sparkles className="h-4 w-4 text-blue-500 dark:text-purple-400" />
@@ -49,7 +50,7 @@ export const Hero = () => {
                     <a href="#how-it-works" className="group"> {/* Updated to link to the new section */}
                         <Button size="lg" variant="outline" className="group">
                             <Play className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                            See How It Works
+                            Watch Demo
                         </Button>
                     </a>
                 </div>

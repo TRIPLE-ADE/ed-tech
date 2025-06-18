@@ -20,7 +20,7 @@ const Header = () => {
   const pathname = usePathname(); 
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/30">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           <Sparkles className="h-6 w-6 text-blue-500 dark:text-purple-400" />
@@ -47,11 +47,11 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center space-x-4">
-          <Link href="/login">
+          <Link href="/signin">
             <Button variant="ghost" className="hidden md:block">Sign In</Button>
           </Link>
-          <Link href="/register">
-            <Button className="hidden md:block">Sign Up</Button>
+          <Link href="/signup">
+            <Button className="hidden md:block">Get Started</Button>
           </Link>
           
           <ThemeToggle />
@@ -113,11 +113,11 @@ const Header = () => {
                 </Link>
               ))}
               <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Link href="/login" onClick={() => setIsOpen(false)}>
+                <Link href="/signin" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full">Sign In</Button>
                 </Link>
-                <Link href="/register" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full">Sign Up</Button>
+                <Link href="/signup" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full">Get Started</Button>
                 </Link>
               </div>
             </nav>

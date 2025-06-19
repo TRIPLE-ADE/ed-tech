@@ -76,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
       setUser(null);
-      router.push('/signin');
+      router.push('/auth/signin');
     } catch (error) {
       throw error;
     }

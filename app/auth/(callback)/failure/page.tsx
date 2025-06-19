@@ -37,7 +37,7 @@ export default function AuthFailurePage() {
   };
 
   const handleRetry = () => {
-    router.replace("/signin");
+    router.replace("/auth/signin");
   };
 
   return (

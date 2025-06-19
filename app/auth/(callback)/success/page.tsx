@@ -17,12 +17,12 @@ export default function AuthSuccessPage() {
       try {
         // rehydrate session
         await checkAuthState();
-        toast.success("Successfully signed in with Google!");
+        toast.success("Successfully signed in with Google!", { id: "oauth-success" });
         router.replace("/dashboard");
       } catch (err) {
         console.error("OAuth callback error:", err);
-        toast.error("Authentication failed. Redirecting to sign in...");
-        router.replace("/signin");
+        toast.error("Authentication failed. Redirecting to sign in...", { id: "oauth-error" });
+        router.replace("/auth/signin");
       }
     })();
   }, [checkAuthState, router]);

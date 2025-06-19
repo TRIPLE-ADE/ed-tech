@@ -47,10 +47,10 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center space-x-4">
-          <Link href="/signin">
+          <Link href="/auth/signin">
             <Button variant="ghost" className="hidden md:block">Sign In</Button>
           </Link>
-          <Link href="/signup">
+          <Link href="/auth/signup">
             <Button className="hidden md:block">Get Started</Button>
           </Link>
           
@@ -113,10 +113,10 @@ const Header = () => {
                 </Link>
               ))}
               <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Link href="/signin" onClick={() => setIsOpen(false)}>
+                <Link href="/auth/signin" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full">Sign In</Button>
                 </Link>
-                <Link href="/signup" onClick={() => setIsOpen(false)}>
+                <Link href="/auth/signup" onClick={() => setIsOpen(false)}>
                   <Button className="w-full">Get Started</Button>
                 </Link>
               </div>

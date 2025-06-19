@@ -262,7 +262,7 @@ export function SignUpForm() {
       <p className='text-center text-sm text-slate-600 dark:text-slate-400'>
         Already have an account?{" "}
         <Link
-          href='/signin'
+          href="/auth/signin"
           className='text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium'
         >
           Sign in

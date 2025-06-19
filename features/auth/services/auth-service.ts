@@ -21,7 +21,7 @@ export class AppwriteAuthService {
   // Login user
   async login({ email, password }: LoginUserRequest): Promise<Models.Session> {
     try {
-      return await account.createSession(email, password);
+      return await account.createEmailPasswordSession(email, password);
     } catch (error: any) {
       throw new Error(error.message || 'Login failed');
     }

@@ -1,20 +1,29 @@
-import { account } from '@/lib/appwrite/config'
-import { ID, Models } from 'appwrite'
-import { CreateUserRequest, LoginUserRequest } from '../types/auth.types';
+import { account } from "@/lib/appwrite/config";
+import { ID, Models, OAuthProvider } from "appwrite";
+import { CreateUserRequest, LoginUserRequest } from "../types/auth.types";
 
 export class AppwriteAuthService {
   // Create a new account
-  async createAccount({ email, password, name }: CreateUserRequest): Promise<Models.User<Models.Preferences>> {
+  async createAccount({
+    email,
+    password,
+    name,
+  }: CreateUserRequest): Promise<Models.User<Models.Preferences>> {
     try {
-      const userAccount = await account.create(ID.unique(), email, password, name);
+      const userAccount = await account.create(
+        ID.unique(),
+        email,
+        password,
+        name
+      );
       if (userAccount) {
         await this.login({ email, password });
         return userAccount;
       } else {
-        throw new Error('Account creation failed');
+        throw new Error("Account creation failed");
       }
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create account');
+      throw new Error(error.message || "Failed to create account");
     }
   }
 
@@ -23,7 +32,22 @@ export class AppwriteAuthService {
     try {
       return await account.createEmailPasswordSession(email, password);
     } catch (error: any) {
-      throw new Error(error.message || 'Login failed');
+      throw new Error(error.message || "Login failed");
+    }
+  }
+
+  // google OAuth
+  async googleOAuth(): Promise<void> {
+    try {
+      account.createOAuth2Session(
+        OAuthProvider.Google,
+        `${window.location.origin}/auth/success`,
+        `${window.location.origin}/auth/failure`
+      );
+      
+    } catch (error: any) {
+      console.log("Google OAuth error:", error);
+      throw new Error(error.message || "Google OAuth failed");
     }
   }
 
@@ -32,7 +56,7 @@ export class AppwriteAuthService {
     try {
       return await account.get();
     } catch (error) {
-      console.log('No current user session');
+      console.log("No current user session");
       return null;
     }
   }
@@ -42,21 +66,24 @@ export class AppwriteAuthService {
     try {
       await account.deleteSessions();
     } catch (error: any) {
-      throw new Error(error.message || 'Logout failed');
+      throw new Error(error.message || "Logout failed");
     }
   }
 
   // Delete current session
   async deleteCurrentSession(): Promise<void> {
     try {
-      await account.deleteSession('current');
+      await account.deleteSession("current");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to delete session');
+      throw new Error(error.message || "Failed to delete session");
     }
   }
 
-    // Update user profile
-    async updateProfile(data: { name?: string; prefs?: object }): Promise<Models.User<Models.Preferences>> {
+  // Update user profile
+  async updateProfile(data: {
+    name?: string;
+    prefs?: object;
+  }): Promise<Models.User<Models.Preferences>> {
     try {
       if (data.name) {
         await account.updateName(data.name);
@@ -66,13 +93,13 @@ export class AppwriteAuthService {
       }
       const user = await this.getCurrentUser();
       if (!user) {
-        throw new Error('No current user found');
+        throw new Error("No current user found");
       }
       return user;
     } catch (error: any) {
-      throw new Error(error.message || 'Profile update failed');
+      throw new Error(error.message || "Profile update failed");
     }
-    }
+  }
 
   // Reset password
   async resetPassword(email: string): Promise<Models.Token> {
@@ -82,7 +109,7 @@ export class AppwriteAuthService {
         `${window.location.origin}/auth/reset-password`
       );
     } catch (error: any) {
-      throw new Error(error.message || 'Password reset failed');
+      throw new Error(error.message || "Password reset failed");
     }
   }
 
@@ -90,12 +117,12 @@ export class AppwriteAuthService {
   async confirmPasswordReset(
     userId: string,
     secret: string,
-    password: string,
+    password: string
   ): Promise<Models.Token> {
     try {
       return await account.updateRecovery(userId, secret, password);
     } catch (error: any) {
-      throw new Error(error.message || 'Password reset confirmation failed');
+      throw new Error(error.message || "Password reset confirmation failed");
     }
   }
 }

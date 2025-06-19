@@ -4,21 +4,22 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brain, ArrowLeft, Mail, Lock } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   Button,
   Separator,
   Checkbox,
+  CustomInput
 } from "@/components/ui";
-import { CustomInput } from "@/components/ui";
+
 import { useAuth } from "../contexts/auth-context";
 import { signInSchema, type SignInFormData } from "../validations";
 
 export function SignInForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, googleOAuth } = useAuth();
   const router = useRouter();
 
   const {
@@ -61,7 +62,8 @@ export function SignInForm() {
 
   const handleGoogleSignIn = async () => {
     // Implement Google OAuth with Appwrite
-    toast.info("Google sign-in coming soon!");
+    // toast.info("Google sign-in coming soon!");
+    await googleOAuth();
   };
 
   return (

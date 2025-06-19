@@ -4,15 +4,17 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brain, ArrowLeft, Mail, Lock, User, CheckCircle } from "lucide-react";
+import { Mail, Lock, User, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   Button,
   Separator,
   Checkbox,
+  CustomInput,
+   PasswordStrength
 } from "@/components/ui";
-import { CustomInput, PasswordStrength } from "@/components/ui";
+
 import { useAuth } from "../contexts/auth-context";
 import { signUpSchema, type SignUpFormData } from "../validations";
 

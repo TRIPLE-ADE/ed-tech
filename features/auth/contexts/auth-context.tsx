@@ -1,7 +1,10 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'
 import { Models } from 'appwrite';
+
 import { authService } from '@/features/auth/services/auth-service';
+
 
 
 interface AuthContextType {
@@ -10,6 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
+  googleOAuth: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
 
@@ -30,6 +34,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     checkAuthState();
@@ -40,6 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch (error) {
+      setUser(null);
       console.error('Auth check failed:', error);
     } finally {
       setLoading(false);
@@ -69,6 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
       setUser(null);
+      router.push('/signin');
     } catch (error) {
       throw error;
     }
@@ -82,10 +89,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const googleOAuth = async () => {
+    try { 
+      await authService.googleOAuth();
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     loading,
     login,
+    googleOAuth,
     register,
     logout,
     resetPassword,

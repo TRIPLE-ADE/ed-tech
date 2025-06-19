@@ -6,6 +6,7 @@ export * from './custom-input';
 export * from './input';
 export * from './label';
 export * from './link';
+export * from './password-strength';
 export * from './progress';
 export * from './radio-group';
 export * from './scroll-area';

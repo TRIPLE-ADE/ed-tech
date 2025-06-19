@@ -20,7 +20,8 @@ import { signUpSchema, type SignUpFormData } from "../validations";
 
 export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, googleOAuth } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
 
   const {
@@ -79,10 +80,17 @@ export function SignUpForm() {
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    // Implement Google OAuth with Appwrite
-    toast.info("Google sign-up coming soon!");
-  };
+   const handleGoogleSignUp = async () => {
+      try {
+        setIsGoogleLoading(true);
+        await googleOAuth();
+        // The OAuth flow will redirect to success/failure pages
+      } catch (error: any) {
+        console.error("Google sign-in error:", error);
+        toast.error(error.message || "Google sign-in failed. Please try again.");
+        setIsGoogleLoading(false);
+      }
+    };
 
 
   return (
@@ -254,7 +262,7 @@ export function SignUpForm() {
       <p className='text-center text-sm text-slate-600 dark:text-slate-400'>
         Already have an account?{" "}
         <Link
-          href='/auth/signin'
+          href='/signin'
           className='text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium'
         >
           Sign in

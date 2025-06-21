@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useLayout } from "./layout-provider"
+import { useAuth } from "@/contexts/auth-context"
+import { generateTwoInitials } from "@/lib/utils"
 
 interface SidebarItem {
   href: string
@@ -39,6 +41,9 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   const pathname = usePathname()
   const { closeSidebar } = useLayout()
+  const { user } = useAuth()
+
+  console.log("User in DashboardSidebar:", user)
 
   const handleLinkClick = () => {
     closeSidebar()
@@ -91,11 +96,11 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
               <Button variant="ghost" className="w-full justify-start gap-3 p-3">
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarFallback>{generateTwoInitials(user?.name ?? "")}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left">
-                  <div className="text-sm font-medium">John Doe</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">john@example.com</div>
+                  <div className="text-sm font-medium">{user?.name}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</div>
                 </div>
               </Button>
             </DropdownMenuTrigger>

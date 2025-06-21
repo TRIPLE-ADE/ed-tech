@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Models } from "appwrite";
 
 import { authService } from "@/features/auth/services/auth-service";
-import { AuthLoadingKey } from "../types/auth.types";
+import { AuthLoadingKey } from "@/features/auth/types/auth.types";
 
 interface AuthContextType {
   user: Models.User<Models.Preferences> | null;

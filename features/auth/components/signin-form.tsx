@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Button, Separator, Checkbox, CustomInput } from "@/components/ui";
 import { GoogleOAuthButton } from "./google-auth-buttton";
 
-import { useAuth } from "../contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { signInSchema, type SignInFormData } from "../validations";
 
 export function SignInForm() {

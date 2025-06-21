@@ -78,7 +78,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { useAuth } from "@/features/auth/contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function AuthSuccessPage() {
   const { checkAuthState, loading } = useAuth();
@@ -107,7 +107,7 @@ export default function AuthSuccessPage() {
     };
 
     handleAuth();
-  }, []); // Empty dependency array - only run on mount
+  }, []);
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4'>

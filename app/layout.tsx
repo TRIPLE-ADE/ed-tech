@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist, Bebas_Neue } from "next/font/google";
-import { AuthProvider } from "@/features/auth/contexts/auth-context";
+import { AuthProvider } from "@/contexts/auth-context";
 
 const geist = Geist({
   variable: "--font-geist",

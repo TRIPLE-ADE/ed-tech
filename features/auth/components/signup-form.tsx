@@ -16,7 +16,7 @@ import {
 } from "@/components/ui";
 import { GoogleOAuthButton } from "./google-auth-buttton";
 
-import { useAuth } from "../contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { signUpSchema, type SignUpFormData } from "../validations";
 
 export function SignUpForm() {

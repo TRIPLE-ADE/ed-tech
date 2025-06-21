@@ -34,11 +34,7 @@ export const Header = () => {
             <Link
               key={item.href}
               href={item.href}
-              className={`transition-colors hover:text-foreground/80 ${
-                pathname === item.href || (item.href.startsWith('#') && pathname === '/')
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-foreground/60 dark:text-foreground/40" 
-              }`}
+              className={`transition-colors hover:text-foreground/80 text-blue-600 dark:text-blue-400`}
               aria-current={pathname === item.href ? "page" : undefined}
             >
               {item.label}

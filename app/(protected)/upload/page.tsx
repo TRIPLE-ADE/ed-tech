@@ -1,507 +1,318 @@
-// "use client";
-// import { useMemo, useState } from "react";
+"use client"
+import { useState, useCallback } from "react"
+import { useDropzone } from "react-dropzone"
+import { Upload, FileText, Video, Link, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-// // lib
-// import { experimental_useObject } from "@ai-sdk/react";
-// import { z } from "zod";
-// import { toast } from "sonner";
-// import { Loader2 } from "lucide-react";
-// import { AnimatePresence, motion } from "framer-motion";
+interface UploadedFile {
+  id: string
+  name: string
+  size: number
+  type: string
+  status: "uploading" | "processing" | "completed" | "error"
+  progress: number
+  error?: string
+}
 
-// // utilities
-// import { questionsSchema } from "@/lib/schemas";
-// import { generateQuizTitle } from "../actions";
+export default function UploadPage() {
+  const [files, setFiles] = useState<UploadedFile[]>([])
+  const [youtubeUrl, setYoutubeUrl] = useState("")
+  const [textContent, setTextContent] = useState("")
 
-// // Components
-// import { Progress, Button, Card, CardContent } from "@/components/ui";
-// import Quiz from "@/components/quiz";
-// import Summary from "@/components/summary";
-// import { WorkflowSteps } from "@/components/workflow-steps";
-// import FileUpload from "@/components/file-upload";
-// import ModeCustomization from "@/components/mode-customization";
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: "uploading",
+      progress: 0,
+    }))
 
-// // Custom Hooks
-// import { useDragAndDrop, useFileHandler } from "@/hooks";
-// import { useSummarizer } from "@/hooks/useSummarizer";
+    setFiles((prev) => [...prev, ...newFiles])
 
-// // Types
-// import { DifficultyLevel, QuestionType } from "@/types/question";
+    // Simulate upload progress
+    newFiles.forEach((file) => {
+      simulateUpload(file.id)
+    })
+  }, [])
 
-// export default function ChatWithFiles() {
-//   const [questions, setQuestions] = useState<z.infer<typeof questionsSchema>>(
-//     []
-//   );
-//   const [title, setTitle] = useState<string>();
-//   const [mode, setMode] = useState<"quiz" | "summary" | null>(null);
-//   const [questionType, setQuestionType] =
-//     useState<QuestionType>("Multiple Choice");
-//   const [difficulty, setDifficulty] = useState<DifficultyLevel>("Medium");
-//   const [questionCount, setQuestionCount] = useState<number | "">(5);
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [progress, setProgress] = useState(0);
-
-//   const { files, handleFileChange, clearFiles, getFiles, fileInputRef } =
-//     useFileHandler();
-
-//   const { isDragging, handleDragOver, handleDragLeave, handleDrop } =
-//     useDragAndDrop((files: FileList) =>
-//       handleFileChange({
-//         target: { files },
-//       } as React.ChangeEvent<HTMLInputElement>)
-//     );
-  
-//   const {
-//     summary,
-//     isSummarizing,
-//     summarizeFiles,
-//     resetSummary,
-//     cancelSummarizing,
-//   } = useSummarizer();
-
-//   const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
-    
-//     try {
-//       if (files.length === 0) {
-//         toast.error("Please upload a PDF file first");
-//         return;
-//       }
-      
-//       if (mode === "quiz") {
-//         // Generate a title for the quiz
-//         const generatedTitle = await generateQuizTitle(files[0].name);
-//         setTitle(generatedTitle);
-        
-//         // Create a FormData object to send the file directly
-//         const formData = new FormData();
-//         formData.append("file", files[0]);
-//         formData.append("questionCount", questionCount.toString());
-//         formData.append("difficulty", difficulty);
-//         formData.append("questionType", questionType);
-        
-//         // Track progress with a simple incrementing counter
-//         const progressInterval = setInterval(() => {
-//           setProgress(prev => {
-//             const newProgress = prev + 2;
-//             return newProgress >= 95 ? 95 : newProgress;
-//           });
-//         }, 500);
-        
-//         // Send the request
-//         const response = await fetch("/api/generate-quiz", {
-//           method: "POST",
-//           body: formData,
-//         });
-        
-//         clearInterval(progressInterval);
-        
-//         if (!response.ok) {
-//           const errorData = await response.json();
-//           throw new Error(errorData.error || "Failed to generate quiz");
-//         }
-        
-//         const data = await response.json();
-//         setQuestions(data);
-//         setProgress(100);
-//       } 
-//       // else if (mode === "summary") {
-//       //   summarizeFiles(files);
-//       // }
-//     } catch (error) {
-//       console.error("Error handling submission:", error);
-//       toast.error(`Error: ${(error as Error).message}`);
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   const clearPDF = () => {
-//     clearFiles();
-//     setTitle("");
-//     setQuestions([]);
-//     resetSummary();
-//     setMode(null);
-//     setProgress(0);
-//   };
-
-//   if (summary) {
-//     return <Summary summary={summary} onClear={clearPDF} />;
-//   }
-
-//   if (questions.length > 0) {
-//     return (
-//       <Quiz title={title ?? "Quiz"} questions={questions} clearPDF={clearPDF} />
-//     );
-//   }
-
-//   return (
-//     <div
-//       className="min-h-[100dvh] w-full flex justify-center"
-//       onDragOver={handleDragOver}
-//       onDragExit={handleDragLeave}
-//       onDragEnd={handleDragLeave}
-//       onDragLeave={handleDragLeave}
-//       onDrop={handleDrop}
-//     >
-//       <AnimatePresence>
-//         {isDragging && (
-//           <motion.div
-//             className="fixed pointer-events-none dark:bg-zinc-900/90 h-dvh w-dvw z-10 justify-center items-center flex flex-col gap-1 bg-zinc-100/90"
-//             initial={{ opacity: 0 }}
-//             animate={{ opacity: 1 }}
-//             exit={{ opacity: 0 }}
-//           >
-//             <div>Drag and drop files here</div>
-//             <div className="text-sm dark:text-zinc-400 text-zinc-500">
-//               {"(PDFs only)"}
-//             </div>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-//       <Card className="w-full max-w-md h-full border-0 sm:border sm:h-fit mt-12">
-//         <WorkflowSteps />
-//         <CardContent>
-//           <form onSubmit={handleSubmitWithFiles} className="space-y-4">
-//             <FileUpload
-//               files={files}
-//               handleFileChange={handleFileChange}
-//               fileInputRef={fileInputRef}
-//             />
-//             {/* Mode Selection */}
-//             <ModeCustomization
-//               mode={mode}
-//               setMode={setMode}
-//               questionType={questionType}
-//               setQuestionType={setQuestionType}
-//               difficulty={difficulty}
-//               setDifficulty={setDifficulty}
-//               questionCount={questionCount}
-//               setQuestionCount={setQuestionCount}
-//               disabled={isSubmitting || isSummarizing}
-//             />
-            
-//             {isSubmitting && (
-//               <div className="flex flex-col space-y-4">
-//                 <div className="w-full space-y-1">
-//                   <div className="flex justify-between text-sm text-muted-foreground">
-//                     <span>Progress</span>
-//                     <span>{Math.round(progress)}%</span>
-//                   </div>
-//                   <Progress value={progress} className="h-2" />
-//                 </div>
-//                 <div className="w-full space-y-2">
-//                   <div className="grid grid-cols-6 sm:grid-cols-4 items-center space-x-2 text-sm">
-//                     <div
-//                       className={`h-2 w-2 rounded-full ${
-//                         isSubmitting
-//                           ? "bg-yellow-500/50 animate-pulse"
-//                           : "bg-muted"
-//                       }`}
-//                     />
-//                     <span className="text-muted-foreground text-center col-span-4 sm:col-span-2">
-//                       {progress > 0
-//                         ? `Generating quiz...`
-//                         : "Analyzing PDF content"}
-//                     </span>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-//             <Button
-//               type="submit"
-//               className="w-full"
-//               disabled={
-//                 files.length === 0 || !mode || isSubmitting || isSummarizing
-//               }
-//             >
-//               {isSubmitting || isSummarizing ? (
-//                 <span className="flex items-center space-x-2">
-//                   <Loader2 className="h-4 w-4 animate-spin" />
-//                   <span>
-//                     {mode === "quiz" ? "Generating Quiz..." : "Summarizing..."}
-//                   </span>
-//                 </span>
-//               ) : mode === "quiz" ? (
-//                 "Generate Quiz"
-//               ) : (
-//                 "Summarize PDF"
-//               )}
-//             </Button>
-//           </form>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// }
-
-"use client";
-import { useMemo, useState } from "react";
-
-// lib
-import { experimental_useObject } from "@ai-sdk/react";
-import { z } from "zod";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-
-// utilities
-import { questionsSchema } from "@/lib/schemas";
-import { generateQuizTitle } from "../actions";
-
-// Components
-import { Progress, Button, Card, CardContent } from "@/components/ui";
-import Quiz from "@/components/quiz";
-import Summary from "@/components/summary";
-import { WorkflowSteps } from "@/components/workflow-steps";
-import FileUpload from "@/components/file-upload";
-import ModeCustomization from "@/components/mode-customization";
-
-// Custom Hooks
-import { useDragAndDrop } from "@/hooks";
-import { useFileHandler } from "@/hooks/useFileHandler";
-import { useSummarizer } from "@/hooks/useSummarizer";
-
-// Types
-import { DifficultyLevel, QuestionType } from "@/types/question";
-
-export default function ChatWithFiles() {
-  const [questions, setQuestions] = useState<z.infer<typeof questionsSchema>>(
-    []
-  );
-  const [title, setTitle] = useState<string>();
-  const [mode, setMode] = useState<"quiz" | "summary" | null>(null);
-  const [questionType, setQuestionType] =
-    useState<QuestionType>("Multiple Choice");
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>("Medium");
-  const [questionCount, setQuestionCount] = useState<number | "">(5);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const { 
-    files, 
-    uploadedFiles,
-    handleFileChange, 
-    clearFiles, 
-    fileInputRef,
-    isUploading 
-  } = useFileHandler();
-
-  const { isDragging, handleDragOver, handleDragLeave, handleDrop } =
-    useDragAndDrop((files: FileList) =>
-      handleFileChange({
-        target: { files },
-      } as React.ChangeEvent<HTMLInputElement>)
-    );
-    
-  const {
-    summary,
-    isSummarizing,
-    summarizeFiles,
-    resetSummary,
-    cancelSummarizing,
-  } = useSummarizer();
-
-  const {
-    submit,
-    object: partialQuestions,
-    isLoading,
-  } = experimental_useObject({
-    api: "/api/generate-quiz",
-    schema: questionsSchema,
-    initialValue: undefined,
-    onError: (error) => {
-      toast.error("Failed to generate quiz. Please try again. " + error);
-      setIsProcessing(false);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "application/pdf": [".pdf"],
+      "text/plain": [".txt"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
-    onFinish: ({ object, error }) => {
-      if (error) {
-        console.error("Error generating quiz:", error);
-        toast.error("Failed to generate quiz. Please try again. " + error);
-        setIsProcessing(false);
-        return;
-      }
-      setQuestions(object ?? []);
-      setIsProcessing(false);
-    },
-  });
+    maxSize: 10 * 1024 * 1024, 
+  })
 
-  const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // Check if we have files and that the number of files matches the number of uploaded files
-    if (files.length === 0) {
-      toast.error("Please select a file first");
-      return;
-    }
-    
-    if (uploadedFiles.length === 0) {
-      toast.error("No files have been successfully uploaded");
-      return;
-    }
-    
-    setIsProcessing(true);
-    
-    try {
-      if (mode === "quiz") {
-        submit({ 
-          fileMetadata: uploadedFiles[0],
-          questionType, 
-          questionCount, 
-          difficulty 
-        });
-        
-        const generatedTitle = await generateQuizTitle(uploadedFiles[0].name);
-        setTitle(generatedTitle);
-      } else if (mode === "summary") {
-        summarizeFiles(uploadedFiles[0]);
-      }
-    } catch (error) {
-      console.error("Error processing files:", error);
-      toast.error(`Failed to process files: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setIsProcessing(false);
-    }
-  };
+  const simulateUpload = (fileId: string) => {
+    const interval = setInterval(() => {
+      setFiles((prev) =>
+        prev.map((file) => {
+          if (file.id === fileId) {
+            if (file.progress < 100) {
+              return { ...file, progress: file.progress + 10 }
+            } else if (file.status === "uploading") {
+              return { ...file, status: "processing" }
+            } else if (file.status === "processing") {
+              // Simulate random completion or error
+              const success = Math.random() > 0.2 // 80% success rate
+              return {
+                ...file,
+                status: success ? "completed" : "error",
+                error: success ? undefined : "Failed to process document",
+              }
+            }
+          }
+          return file
+        }),
+      )
+    }, 500)
 
-  const clearPDF = () => {
-    clearFiles();
-    setTitle("");
-    setQuestions([]);
-    resetSummary();
-    setMode(null);
-  };
-
-  const progress = useMemo(() => {
-    // If questionCount is empty, default to 5.
-    const count = questionCount === "" ? 5 : questionCount;
-    return partialQuestions ? (partialQuestions.length / count) * 100 : 0;
-  }, [partialQuestions, questionCount]);
-
-  const isButtonDisabled = files.length === 0 || !mode || isProcessing || isUploading;
-  const showProgress = isUploading || isLoading || isSummarizing;
-
-  if (summary) {
-    return <Summary summary={summary} onClear={clearPDF} />;
+    setTimeout(() => clearInterval(interval), 6000)
   }
 
-  if (questions.length > 0) {
-    return (
-      <Quiz title={title ?? "Quiz"} questions={questions} clearPDF={clearPDF} />
-    );
+  const removeFile = (fileId: string) => {
+    setFiles((prev) => prev.filter((file) => file.id !== fileId))
+  }
+
+  const handleYoutubeSubmit = () => {
+    if (!youtubeUrl) return
+
+    const newFile: UploadedFile = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: `YouTube Video: ${youtubeUrl}`,
+      size: 0,
+      type: "video/youtube",
+      status: "processing",
+      progress: 100,
+    }
+
+    setFiles((prev) => [...prev, newFile])
+    setYoutubeUrl("")
+
+    // Simulate processing
+    setTimeout(() => {
+      setFiles((prev) => prev.map((file) => (file.id === newFile.id ? { ...file, status: "completed" } : file)))
+    }, 3000)
+  }
+
+  const handleTextSubmit = () => {
+    if (!textContent.trim()) return
+
+    const newFile: UploadedFile = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: `Text Content (${textContent.slice(0, 30)}...)`,
+      size: textContent.length,
+      type: "text/plain",
+      status: "processing",
+      progress: 100,
+    }
+
+    setFiles((prev) => [...prev, newFile])
+    setTextContent("")
+
+    // Simulate processing
+    setTimeout(() => {
+      setFiles((prev) => prev.map((file) => (file.id === newFile.id ? { ...file, status: "completed" } : file)))
+    }, 2000)
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes"
+    const k = 1024
+    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "uploading":
+        return <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+      case "processing":
+        return <Loader2 className="w-4 h-4 animate-spin text-yellow-500" />
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-green-500" />
+      case "error":
+        return <AlertCircle className="w-4 h-4 text-red-500" />
+      default:
+        return null
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "uploading":
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">Uploading</Badge>
+      case "processing":
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">Processing</Badge>
+        )
+      case "completed":
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Completed</Badge>
+      case "error":
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">Error</Badge>
+      default:
+        return null
+    }
   }
 
   return (
-    <div
-      className="min-h-[100dvh] w-full flex justify-center"
-      onDragOver={handleDragOver}
-      onDragExit={handleDragLeave}
-      onDragEnd={handleDragLeave}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <AnimatePresence>
-        {isDragging && (
-          <motion.div
-            className="fixed pointer-events-none dark:bg-zinc-900/90 h-dvh w-dvw z-10 justify-center items-center flex flex-col gap-1 bg-zinc-100/90"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div>Drag and drop files here</div>
-            <div className="text-sm dark:text-zinc-400 text-zinc-500">
-              {"(PDFs up to 30MB)"}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <Card className="w-full max-w-md h-full border-0 sm:border sm:h-fit mt-12">
-        <WorkflowSteps />
-        <CardContent>
-          <form onSubmit={handleSubmitWithFiles} className="space-y-4">
-            <FileUpload
-              files={files}
-              handleFileChange={handleFileChange}
-              fileInputRef={fileInputRef}
-            />
-            <ModeCustomization
-              mode={mode}
-              setMode={setMode}
-              questionType={questionType}
-              setQuestionType={setQuestionType}
-              difficulty={difficulty}
-              setDifficulty={setDifficulty}
-              questionCount={questionCount}
-              setQuestionCount={setQuestionCount}
-              disabled={isProcessing}
-            />
-            
-            {showProgress && (
-              <div className="flex flex-col space-y-4">
-                <div className="w-full space-y-1">
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Progress</span>
-                    <span>
-                      {isUploading 
-                        ? "Uploading..." 
-                        : isLoading && partialQuestions 
-                          ? `${Math.round(progress)}%` 
-                          : "Processing..."}
-                    </span>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Upload Content</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-1">
+          Upload documents, add YouTube videos, or paste text to start learning with AI
+        </p>
+      </div>
+
+      <Tabs defaultValue="files" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 gap-1">
+          <TabsTrigger value="files" className="flex items-center gap-2 ">
+            <FileText className="w-4 h-4" />
+            Files
+          </TabsTrigger>
+          <TabsTrigger value="youtube" className="flex items-center gap-2">
+            <Video className="w-4 h-4" />
+            YouTube
+          </TabsTrigger>
+          <TabsTrigger value="text" className="flex items-center gap-2">
+            <Link className="w-4 h-4" />
+            Text
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="files">
+          <Card className="border-slate-200 dark:border-slate-700">
+            <CardHeader>
+              <CardTitle>Upload Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  isDragActive
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"
+                }`}
+              >
+                <input {...getInputProps()} />
+                <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isDragActive ? "Drop files here" : "Upload your documents"}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">Drag and drop files here, or click to browse</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Supports PDF, DOC, DOCX, TXT files up to 10MB
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="youtube">
+          <Card className="border-slate-200 dark:border-slate-700">
+            <CardHeader>
+              <CardTitle>Add YouTube Video</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="youtube-url">YouTube URL</Label>
+                <Input
+                  id="youtube-url"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={handleYoutubeSubmit}
+                disabled={!youtubeUrl}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Process Video
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="text">
+          <Card className="border-slate-200 dark:border-slate-700">
+            <CardHeader>
+              <CardTitle>Add Text Content</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="text-content">Text Content</Label>
+                <Textarea
+                  id="text-content"
+                  placeholder="Paste your text content here..."
+                  value={textContent}
+                  onChange={(e) => setTextContent(e.target.value)}
+                  rows={8}
+                />
+              </div>
+              <Button
+                onClick={handleTextSubmit}
+                disabled={!textContent.trim()}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Process Text
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Upload Queue */}
+      {files.length > 0 && (
+        <Card className="border-slate-200 dark:border-slate-700">
+          <CardHeader>
+            <CardTitle>Upload Queue</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700"
+              >
+                <div className="flex-shrink-0">{getStatusIcon(file.status)}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-slate-900 dark:text-slate-100 truncate">{file.name}</h3>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(file.status)}
+                      <Button variant="ghost" size="icon" onClick={() => removeFile(file.id)} className="flex-shrink-0">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <Progress 
-                    value={isUploading ? 50 : isLoading ? progress : 50} 
-                    className="h-2" 
-                  />
-                </div>
-                <div className="w-full space-y-2">
-                  <div className="grid grid-cols-6 sm:grid-cols-4 items-center space-x-2 text-sm">
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        showProgress
-                          ? "bg-yellow-500/50 animate-pulse"
-                          : "bg-muted"
-                      }`}
-                    />
-                    <span className="text-muted-foreground text-center col-span-4 sm:col-span-2">
-                      {isUploading 
-                        ? "Uploading file to server..."
-                        : isLoading && partialQuestions
-                          ? `Generating question ${
-                              partialQuestions.length + 1
-                            } of ${questionCount}`
-                          : mode === "quiz" 
-                            ? "Analyzing PDF content" 
-                            : "Summarizing content"}
-                    </span>
+                  <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                    <span>{formatFileSize(file.size)}</span>
+                    {file.status === "uploading" && <span>{file.progress}%</span>}
                   </div>
+                  {file.status === "uploading" && <Progress value={file.progress} className="h-2" />}
+                  {file.error && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{file.error}</p>}
                 </div>
               </div>
-            )}
-            
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isButtonDisabled}
-            >
-              {showProgress ? (
-                <span className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>
-                    {isUploading 
-                      ? "Uploading..." 
-                      : mode === "quiz" 
-                        ? "Generating Quiz..." 
-                        : "Summarizing..."}
-                  </span>
-                </span>
-              ) : mode === "quiz" ? (
-                "Generate Quiz"
-              ) : (
-                "Summarize PDF"
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
-  );
+  )
 }

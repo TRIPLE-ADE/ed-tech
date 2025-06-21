@@ -1,6 +1,6 @@
 import { account } from "@/lib/appwrite/config";
 import { ID, Models, OAuthProvider } from "appwrite";
-import { CreateUserRequest, LoginUserRequest } from "../types/auth.types";
+import { AppwriteError, CreateUserRequest, LoginUserRequest } from "../types/auth.types";
 
 export class AppwriteAuthService {
   // Create a new account

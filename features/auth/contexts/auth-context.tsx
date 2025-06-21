@@ -1,15 +1,14 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'
-import { Models } from 'appwrite';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Models } from "appwrite";
 
-import { authService } from '@/features/auth/services/auth-service';
-
-
+import { authService } from "@/features/auth/services/auth-service";
+import { AuthLoadingKey } from "../types/auth.types";
 
 interface AuthContextType {
   user: Models.User<Models.Preferences> | null;
   loading: boolean;
+  loadingMap: Record<AuthLoadingKey, boolean>;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -23,7 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -33,52 +32,79 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(
+    null
+  );
+  const [loadingMap, setLoadingMap] = useState<Record<AuthLoadingKey, boolean>>(
+    {
+      initial: false,
+      login: false,
+      register: false,
+      logout: false,
+      googleOAuth: false,
+    }
+  );
+
+  const setLoading = (key: AuthLoadingKey, value: boolean) => {
+    setLoadingMap((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const loading = Object.values(loadingMap).some((value) => value);
 
   useEffect(() => {
     checkAuthState();
   }, []);
 
   const checkAuthState = async () => {
+    setLoading("initial", true);
     try {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
-    } catch (error) {
+    } catch {
       setUser(null);
-      console.error('Auth check failed:', error);
     } finally {
-      setLoading(false);
+      setLoading("initial", false);
     }
   };
 
   const login = async (email: string, password: string) => {
+    setLoading("login", true);
     try {
       await authService.login({ email, password });
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
-    } catch (error) {
-      throw error;
+    } catch (err: any) {
+      throw err;
+    } finally {
+      setLoading("login", false);
     }
   };
 
   const register = async (email: string, password: string, name: string) => {
+    setLoading("register", true);
     try {
-      const newUser = await authService.createAccount({ email, password, name });
+      const newUser = await authService.createAccount({
+        email,
+        password,
+        name,
+      });
       setUser(newUser);
-    } catch (error) {
-      throw error;
+    } catch (err: any) {
+      throw err;
+    } finally {
+      setLoading("register", false);
     }
   };
 
   const logout = async () => {
+    setLoading("logout", true);
     try {
       await authService.logout();
       setUser(null);
-      router.push('/auth/signin');
-    } catch (error) {
-      throw error;
+    } catch (err: any) {
+      throw err;
+    } finally {
+      setLoading("logout", false);
     }
   };
 
@@ -91,16 +117,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const googleOAuth = async () => {
-    try { 
+    setLoading("googleOAuth", true);
+    try {
       await authService.googleOAuth();
-    } catch (error) {
-      throw error;
+    } catch (err: any) {
+      throw err;
     }
   };
 
   const value: AuthContextType = {
     user,
     loading,
+    loadingMap,
     login,
     googleOAuth,
     checkAuthState: checkAuthState,

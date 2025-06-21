@@ -5,9 +5,6 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const referer = request.headers.get("referer");
 
-  const cookies = request.cookies
-  console.log({cookies})
-
   if (authPaths.includes(pathname) && !referer) {
     return NextResponse.redirect(new URL("/auth/signin", request.url));
   }

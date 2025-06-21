@@ -15,7 +15,7 @@ const navItems = [
   { href: "#testimonials", label: "Testimonials" },
 ];
 
-const Header = () => {
+export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname(); 
 
@@ -127,5 +127,3 @@ const Header = () => {
     </header>
   );
 };
-
-export default Header;

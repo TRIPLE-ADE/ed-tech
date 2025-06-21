@@ -18,13 +18,6 @@ export default function AuthFailurePage() {
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
-  useEffect(() => {
-    // Log the error for debugging
-    if (error) {
-      console.error("OAuth Error:", error, errorDescription);
-    }
-  }, [error, errorDescription]);
-
   const getErrorMessage = () => {
     switch (error) {
       case "access_denied":

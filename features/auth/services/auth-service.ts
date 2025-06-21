@@ -1,6 +1,10 @@
 import { account } from "@/lib/appwrite/config";
 import { ID, Models, OAuthProvider } from "appwrite";
-import { AppwriteError, CreateUserRequest, LoginUserRequest } from "../types/auth.types";
+import {
+  AppwriteError,
+  CreateUserRequest,
+  LoginUserRequest,
+} from "../types/auth.types";
 
 export class AppwriteAuthService {
   // Create a new account
@@ -39,12 +43,16 @@ export class AppwriteAuthService {
   // google OAuth
   async googleOAuth(): Promise<void> {
     try {
+      const currentOrigin =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "http://localhost:3000";
+
       account.createOAuth2Session(
         OAuthProvider.Google,
-        `${window.location.origin}/auth/success`,
-        `${window.location.origin}/auth/failure`
+        `${currentOrigin}/auth/success`,
+        `${currentOrigin}/auth/failure`
       );
-      
     } catch (error: any) {
       console.log("Google OAuth error:", error);
       throw new Error(error.message || "Google OAuth failed");

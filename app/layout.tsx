@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist, Bebas_Neue } from "next/font/google";
+import { AuthProvider } from "@/contexts/auth-context";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -51,14 +52,16 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang='en'
       suppressHydrationWarning
       className={`${geist.className} ${bebasNeue.variable}`}
     >
       <body>
-        <ThemeProvider attribute="class" enableSystem defaultTheme="system">
-          <Toaster position="top-center" richColors />
-          {children}
+        <ThemeProvider attribute='class' enableSystem defaultTheme='system'>
+          <AuthProvider>
+            <Toaster position='top-center' richColors />
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

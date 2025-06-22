@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useLayout } from "./layout-provider"
 import { useAuth } from "@/contexts/auth-context"
-import { generateTwoInitials } from "@/lib/utils"
+import { generateTwoInitials, truncateText } from "@/lib/utils"
 
 interface SidebarItem {
   href: string
@@ -93,14 +93,14 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
         <div className="p-4 border-t border-slate-200 dark:border-slate-700">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start gap-3 p-3">
+              <Button variant="ghost" className="w-full justify-start gap-2 p-3">
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
                   <AvatarFallback>{generateTwoInitials(user?.name ?? "")}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left">
-                  <div className="text-sm font-medium">{user?.name}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</div>
+                  <div className="text-sm font-medium">{truncateText(user?.name ?? "", 20)}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{truncateText(user?.email ?? "", 25)}</div>
                 </div>
               </Button>
             </DropdownMenuTrigger>

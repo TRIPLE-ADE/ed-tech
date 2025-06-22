@@ -1,3 +1,4 @@
+"use client";
 import { UploadTabs, UploadQueue } from "@/features/documents/components";
 import { useUploadManager } from "@/features/documents/hooks";
 

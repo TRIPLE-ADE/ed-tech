@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DocumentStorageService } from "../services";
 
-const MAX_FILE_SIZE = 30 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30 MB
 
 interface FileUploadTabProps {
   onFilesAccepted: (files: File[]) => void;
@@ -74,7 +74,7 @@ export function FileUploadTab({ onFilesAccepted }: FileUploadTabProps) {
             Drag and drop files here, or click to browse
           </p>
           <p className='text-sm text-slate-500 dark:text-slate-400'>
-            Supports PDF, DOC, DOCX, TXT files up to 10MB
+            Supports PDF, DOC, DOCX, TXT files up to {DocumentStorageService.formatFileSize(MAX_FILE_SIZE)}
           </p>
         </div>
       </CardContent>

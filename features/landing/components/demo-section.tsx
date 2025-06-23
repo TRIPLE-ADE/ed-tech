@@ -7,7 +7,7 @@ export const Demo = () => {
   return (
     <section
       id='how-it-works'
-      className='py-10 px-4 relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm scroll-mt-20'
+      className='py-10 pt-20 px-4 relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm scroll-mt-20'
     >
       <div className='container mx-auto'>
         <div className='text-center mb-16'>

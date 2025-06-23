@@ -3,8 +3,9 @@ import { useCallback } from "react";
 import { useDropzone, FileRejection } from "react-dropzone";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatFileSize } from "../utils";
+import { DocumentStorageService } from "../services";
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 10 MB
 
@@ -26,8 +27,8 @@ export function FileUploadTab({ onFilesAccepted }: FileUploadTabProps) {
         let errorMessage = error.message;
 
         if (error.code === "file-too-large") {
-          const fileSize = formatFileSize(file.size);
-          const maxSize = formatFileSize(MAX_FILE_SIZE);
+          const fileSize = DocumentStorageService.formatFileSize(file.size);
+          const maxSize = DocumentStorageService.formatFileSize(MAX_FILE_SIZE);
 
           errorMessage = `File size (${fileSize}) exceeds the maximum limit of ${maxSize}`;
         }

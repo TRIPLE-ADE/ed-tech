@@ -1,10 +1,13 @@
 "use client"
 import { X } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { formatFileSize } from "../utils"
+
 import { getStatusIcon, getStatusBadge } from "../utils/status"
 import type { UploadedFile } from "../types"
+import { DocumentStorageService } from "../services"
+
 
 interface UploadQueueItemProps {
   file: UploadedFile
@@ -26,7 +29,7 @@ export function UploadQueueItem({ file, onRemove }: UploadQueueItemProps) {
           </div>
         </div>
         <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
-          <span>{formatFileSize(file.size)}</span>
+          <span>{DocumentStorageService.formatFileSize(file.size)}</span>
           {file.status === "uploading" && <span>{file.progress}%</span>}
         </div>
         {file.status === "uploading" && <Progress value={file.progress} className="h-2" />}

@@ -13,7 +13,7 @@ interface UploadQueueItemProps {
 
 export function UploadQueueItem({ file, onRemove }: UploadQueueItemProps) {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+    <div className="flex items-center gap-4 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
       <div className="flex-shrink-0">{getStatusIcon(file.status)}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-2">

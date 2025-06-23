@@ -13,7 +13,7 @@ export function UploadQueue({ files, onRemoveFile }: UploadQueueProps) {
 
   return (
     <Card className="border-slate-200 dark:border-slate-700">
-      <CardHeader>
+      <CardHeader className="p-2 pl-6 pt-6 ">
         <CardTitle>Upload Queue</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

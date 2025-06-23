@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const systemContent = `You are an expert summarizer. Your task is to read the provided PDF document and produce a concise, informative summary that captures the main points.`;
 
   const result = streamText({
-    model: google("gemini-2.0-flash-001"),
+    model: google("gemini-2.5-pro"),
     system: systemContent,
     abortSignal: req.signal,
     messages: [

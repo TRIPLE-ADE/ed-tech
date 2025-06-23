@@ -17,6 +17,8 @@ export const useFileHandler = () => {
     const formData = new FormData();
     formData.append("file", file);
 
+    const startTime = Date.now();
+
     try {
       const response = await axios.post("https://thryx-backend.onrender.com/upload", formData, {
         headers: {
@@ -52,6 +54,9 @@ export const useFileHandler = () => {
       toast.error(`Failed to upload ${file.name}: ${error.message || "Unknown error"}`, { id: toastId });
       throw error;
     } finally {
+      const endTime = Date.now();
+      const durationInSeconds = (endTime - startTime) / 1000;
+      console.log(`Upload for ${file.name} took ${durationInSeconds.toFixed(2)} seconds.`);
       setIsUploading(false);
     }
   };

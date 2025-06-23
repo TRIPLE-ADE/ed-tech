@@ -28,3 +28,8 @@ export function truncateText(text: string, maxLength: number = 50): string {
 
   return `${text.substring(0, maxLength)}...`;
 }
+
+export function generateFirstName(name: string): string {
+  const nameParts = name.split(" ");
+  return nameParts.length > 0 ? nameParts[0] : "";
+}

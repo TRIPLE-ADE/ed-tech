@@ -12,11 +12,14 @@ import { AchievementsSection } from "@/features/dashboard/components/achievement
 import { QuizDialog } from "@/features/dashboard/components/quiz-dialog"
 import { StudyDialog } from "@/features/dashboard/components/study-dialog"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
+import { generateFirstName } from "@/utils"
 
 export default function DashboardPage() {
   const router = useRouter()
   const { documents, learningGoals, achievements, isLoading, setDocuments } = useDashboardData()
   const { viewDocument, downloadDocument, shareDocument, deleteDocument } = useDocumentActions()
+  const { user } = useAuth();
   const {
     uploadDocument,
     generateQuiz,
@@ -61,7 +64,7 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Welcome back, John! 👋</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Welcome back, {generateFirstName(user?.name ?? " ")}! 👋</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
             Here&apos;s what&apos;s happening with your learning journey today.
           </p>

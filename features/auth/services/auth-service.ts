@@ -1,7 +1,6 @@
 import { account } from "@/lib/appwrite/config";
 import { ID, Models, OAuthProvider } from "appwrite";
 import {
-  AppwriteError,
   CreateUserRequest,
   LoginUserRequest,
 } from "../types/auth.types";

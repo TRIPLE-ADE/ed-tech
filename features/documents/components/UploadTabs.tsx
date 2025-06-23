@@ -25,7 +25,7 @@ export function UploadTabs({
   onTextSubmit,
 }: UploadTabsProps) {
   return (
-    <Tabs defaultValue="files" className="space-y-6">
+    <Tabs defaultValue="files" className="space-y-1">
       <TabsList className="grid w-full grid-cols-3 gap-1">
         <TabsTrigger value="files" className="flex items-center gap-2">
           <FileText className="w-4 h-4" />

@@ -16,6 +16,8 @@ import type {
 import { BUCKET_ID } from "@/lib/appwrite/config";
 import { useAuth } from "@/contexts/auth-context";
 
+const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
+
 export function useUploadManager(): UploadManagerState & UploadManagerActions {
   const { user } = useAuth();
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -60,34 +62,19 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       try {
         updateProcessingStage(fileId, "uploading", 0);
         NotificationService.fileUpload.start(file.name, fileId);
-        
-        // Track progress with debouncing for large files
-        let lastProgressUpdate = 0;
-        const progressThrottle = 100; // Update every 100ms max
-        
+
         const uploadedFile = await DocumentStorageService.uploadFile(
           file,
           {
             bucketId: BUCKET_ID,
             onProgress: (progress) => {
-              const now = Date.now();
-              const progressPercent = Math.round(progress.progress || 0);
-              
-              // Only update if progress changed significantly or enough time passed
-              if (
-                progressPercent !== files.find(f => f.id === fileId)?.progress &&
-                (now - lastProgressUpdate > progressThrottle || progressPercent === 100)
-              ) {
-                lastProgressUpdate = now;
-                
-                updateFile(fileId, { progress: progressPercent });
+                updateFile(fileId, { progress: progress.progress });
                 NotificationService.fileUpload.update(
                   file.name,
-                  progressPercent,
+                  progress.progress,
                   fileId
                 );
               }
-            },
           },
           user?.$id
         );
@@ -111,7 +98,8 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       }
     },
     [updateFile, updateProcessingStage, user?.$id, files]
-  );  /**
+  );
+  /**
    * Add multiple files for upload
    */
   const addFiles = useCallback(
@@ -134,56 +122,28 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
 
       setFiles((prev) => [...prev, ...newFiles]);
 
-      // For large files, upload sequentially to avoid overwhelming the system
-      // For small files (< 5MB), upload concurrently
-      const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
-      const largeFiles = newFiles.filter(f => 
-        acceptedFiles.find(af => af.name === f.name)?.size! > LARGE_FILE_THRESHOLD
+      const fileMap = new Map(acceptedFiles.map((f) => [f.name, f]));
+
+      // Filter out duplicates based on file name
+      const largeFiles = newFiles.filter(
+        (f) => fileMap.get(f.name)?.size! > LARGE_FILE_THRESHOLD
       );
-      const smallFiles = newFiles.filter(f => 
-        acceptedFiles.find(af => af.name === f.name)?.size! <= LARGE_FILE_THRESHOLD
+      const smallFiles = newFiles.filter(
+        (f) => fileMap.get(f.name)?.size! <= LARGE_FILE_THRESHOLD
       );
 
-      try {
-        // Upload small files concurrently
-        if (smallFiles.length > 0) {
-          const smallFilePromises = smallFiles.map(async (uploadedFile) => {
-            const actualFile = acceptedFiles.find(
-              (f) => f.name === uploadedFile.name
-            );
-            if (!actualFile) return;
+      // Upload small files concurrently
+      if (smallFiles.length) {
+        await Promise.allSettled(
+          smallFiles.map((file) =>
+            uploadFileToAppwrite(fileMap.get(file.name)!, file.id)
+          )
+        );
+      }
 
-            try {
-              await uploadFileToAppwrite(actualFile, uploadedFile.id);
-            } catch (error: any) {
-              console.error(`Failed to upload ${uploadedFile.name}:`, error);
-              setError((prev) =>
-                prev ? `${prev}\n${error.message}` : error.message
-              );
-            }
-          });
-
-          await Promise.allSettled(smallFilePromises);
-        }
-
-        // Upload large files sequentially
-        for (const uploadedFile of largeFiles) {
-          const actualFile = acceptedFiles.find(
-            (f) => f.name === uploadedFile.name
-          );
-          if (!actualFile) continue;
-
-          try {
-            await uploadFileToAppwrite(actualFile, uploadedFile.id);
-          } catch (error: any) {
-            console.error(`Failed to upload ${uploadedFile.name}:`, error);
-            setError((prev) =>
-              prev ? `${prev}\n${error.message}` : error.message
-            );
-          }
-        }
-      } finally {
-        setIsProcessing(false);
+      // Upload large files sequentially
+      for (const file of largeFiles) {
+        await uploadFileToAppwrite(fileMap.get(file.name)!, file.id);
       }
     },
     [uploadFileToAppwrite]
@@ -240,7 +200,6 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       type: "video/youtube",
       status: "processing",
       progress: 0,
-      processingStage: "validating",
       metadata: { videoId: validation.videoId },
     };
 
@@ -284,24 +243,18 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       updateFile(fileId, {
         status: "uploading",
         progress: 0,
-        processingStage: "uploading",
-      });      NotificationService.youtube.startUpload(fileId);
-      
-      // Enhanced progress tracking for YouTube uploads
-      let lastUploadProgress = 0;
+      });
+      NotificationService.youtube.startUpload(fileId);
+
       const uploadedFile = await DocumentStorageService.uploadFile(
         result.file,
         {
           bucketId: BUCKET_ID,
           onProgress: (progress) => {
             const currentProgress = Math.round(progress.progress || 0);
-            // Only update if progress increased (important for chunked uploads)
-            if (currentProgress > lastUploadProgress || currentProgress === 100) {
-              lastUploadProgress = currentProgress;
               updateFile(fileId, { progress: currentProgress });
               NotificationService.youtube.updateUpload(currentProgress, fileId);
             }
-          },
         },
         user?.$id
       );
@@ -310,7 +263,6 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       updateFile(fileId, {
         status: "completed",
         appwriteId: uploadedFile.$id,
-        processingStage: "completed",
         progress: 100,
       });
 
@@ -369,27 +321,21 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
         },
       };
 
-      setFiles((prev) => [...prev, newFile]);      // Start upload
+      setFiles((prev) => [...prev, newFile]); // Start upload
       NotificationService.textContent.startUpload(fileId);
-      
-      // Enhanced progress tracking for text content uploads
-      let lastUploadProgress = 0;
+
       const uploadedFile = await DocumentStorageService.uploadFile(
         result.file,
         {
           bucketId: BUCKET_ID,
           onProgress: (progress) => {
-            const currentProgress = Math.round(progress.progress || 0);
-            // Only update if progress increased
-            if (currentProgress > lastUploadProgress || currentProgress === 100) {
-              lastUploadProgress = currentProgress;
+            const currentProgress = Math.round(progress.progress || 0);           
               updateFile(fileId, { progress: currentProgress });
               NotificationService.textContent.updateUpload(
                 currentProgress,
                 fileId
               );
             }
-          },
         },
         user?.$id
       );

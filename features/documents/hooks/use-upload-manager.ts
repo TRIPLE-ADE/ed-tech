@@ -1,21 +1,25 @@
 "use client";
 import { useState, useCallback, useMemo } from "react";
 import { ID } from "appwrite";
-import { 
-  DocumentStorageService, 
-  YouTubeTranscriptService, 
+import {
+  DocumentStorageService,
+  YouTubeTranscriptService,
   TextContentService,
-  NotificationService 
+  NotificationService,
 } from "../services";
-import type { 
-  UploadedFile, 
-  UploadManagerState, 
+import type {
+  UploadedFile,
+  UploadManagerState,
   UploadManagerActions,
-  ProcessingStage 
+  ProcessingStage,
 } from "../types";
 import { BUCKET_ID } from "@/lib/appwrite/config";
+import { useAuth } from "@/contexts/auth-context";
+
+const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
 
 export function useUploadManager(): UploadManagerState & UploadManagerActions {
+  const { user } = useAuth();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [textContent, setTextContent] = useState("");
@@ -29,48 +33,57 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
     return Math.round(totalProgress / files.length);
   }, [files]);
   // Helper function to update file state
-  const updateFile = useCallback((fileId: string, updates: Partial<UploadedFile>) => {
-    setFiles(prev => 
-      prev.map(file => 
-        file.id === fileId ? { ...file, ...updates } : file
-      )
-    );
-  }, []);
+  const updateFile = useCallback(
+    (fileId: string, updates: Partial<UploadedFile>) => {
+      setFiles((prev) =>
+        prev.map((file) =>
+          file.id === fileId ? { ...file, ...updates } : file
+        )
+      );
+    },
+    []
+  );
 
   // Helper function to update processing stage
-  const updateProcessingStage = useCallback((
-    fileId: string, 
-    stage: ProcessingStage, 
-    progress?: number
-  ) => {
-    updateFile(fileId, { 
-      processingStage: stage,
-      ...(progress !== undefined && { progress })
-    });
-  }, [updateFile]);
-
+  const updateProcessingStage = useCallback(
+    (fileId: string, stage: ProcessingStage, progress?: number) => {
+      updateFile(fileId, {
+        processingStage: stage,
+        ...(progress !== undefined && { progress }),
+      });
+    },
+    [updateFile]
+  );
   /**
    * Upload file to Appwrite with progress tracking
    */
   const uploadFileToAppwrite = useCallback(
     async (file: File, fileId: string): Promise<void> => {
       try {
-        updateProcessingStage(fileId, 'uploading', 0);
+        updateProcessingStage(fileId, "uploading", 0);
         NotificationService.fileUpload.start(file.name, fileId);
 
-        const uploadedFile = await DocumentStorageService.uploadFile(file, {
-          bucketId: BUCKET_ID,
-          onProgress: (progress) => {
-            updateFile(fileId, { progress: progress.progress });
-            NotificationService.fileUpload.update(file.name, progress.progress, fileId);
+        const uploadedFile = await DocumentStorageService.uploadFile(
+          file,
+          {
+            bucketId: BUCKET_ID,
+            onProgress: (progress) => {
+                updateFile(fileId, { progress: progress.progress });
+                NotificationService.fileUpload.update(
+                  file.name,
+                  progress.progress,
+                  fileId
+                );
+              }
           },
-        });
+          user?.$id
+        );
 
         updateFile(fileId, {
           status: "completed",
           appwriteId: uploadedFile.$id,
-          processingStage: 'completed',
-          progress: 100
+          processingStage: "completed",
+          progress: 100,
         });
 
         NotificationService.fileUpload.complete(file.name, fileId);
@@ -84,7 +97,7 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
         throw error;
       }
     },
-    [updateFile, updateProcessingStage]
+    [updateFile, updateProcessingStage, user?.$id, files]
   );
   /**
    * Add multiple files for upload
@@ -96,23 +109,6 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       setIsProcessing(true);
       setError("");
 
-      // Validate files
-      const validatedFiles = acceptedFiles.map(file => {
-        const validation = DocumentStorageService.validateFile(file);
-        return { file, validation };
-      });
-
-      const invalidFiles = validatedFiles.filter(({ validation }) => !validation.isValid);
-      if (invalidFiles.length > 0) {
-        const errorMessage = invalidFiles
-          .map(({ file, validation }) => `${file.name}: ${validation.error}`)
-          .join(', ');
-        setError(errorMessage);
-        NotificationService.error('Some files are invalid', { description: errorMessage });
-        setIsProcessing(false);
-        return;
-      }
-
       // Create file entries
       const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
         id: ID.unique(),
@@ -121,26 +117,34 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
         type: file.type,
         status: "uploading",
         progress: 0,
-        processingStage: 'preparing',
+        processingStage: "preparing",
       }));
 
       setFiles((prev) => [...prev, ...newFiles]);
 
-      // Upload files concurrently
-      const uploadPromises = newFiles.map(async (uploadedFile) => {
-        const actualFile = acceptedFiles.find(f => f.name === uploadedFile.name);
-        if (!actualFile) return;
+      const fileMap = new Map(acceptedFiles.map((f) => [f.name, f]));
 
-        try {
-          await uploadFileToAppwrite(actualFile, uploadedFile.id);
-        } catch (error: any) {
-          console.error(`Failed to upload ${uploadedFile.name}:`, error);
-          setError(prev => prev ? `${prev}\n${error.message}` : error.message);
-        }
-      });
+      // Filter out duplicates based on file name
+      const largeFiles = newFiles.filter(
+        (f) => fileMap.get(f.name)?.size! > LARGE_FILE_THRESHOLD
+      );
+      const smallFiles = newFiles.filter(
+        (f) => fileMap.get(f.name)?.size! <= LARGE_FILE_THRESHOLD
+      );
 
-      await Promise.allSettled(uploadPromises);
-      setIsProcessing(false);
+      // Upload small files concurrently
+      if (smallFiles.length) {
+        await Promise.allSettled(
+          smallFiles.map((file) =>
+            uploadFileToAppwrite(fileMap.get(file.name)!, file.id)
+          )
+        );
+      }
+
+      // Upload large files sequentially
+      for (const file of largeFiles) {
+        await uploadFileToAppwrite(fileMap.get(file.name)!, file.id);
+      }
     },
     [uploadFileToAppwrite]
   );
@@ -150,7 +154,7 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
   const removeFile = useCallback(
     async (fileId: string): Promise<void> => {
       const file = files.find((f) => f.id === fileId);
-      
+
       // Remove from local state first for immediate UI feedback
       setFiles((prev) => prev.filter((file) => file.id !== fileId));
 
@@ -163,7 +167,9 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
           console.error("Failed to delete file from storage:", error);
           const errorMessage = `Failed to delete file: ${error.message}`;
           setError(errorMessage);
-          NotificationService.error("Delete failed", { description: errorMessage });
+          NotificationService.error("Delete failed", {
+            description: errorMessage,
+          });
         }
       }
     },
@@ -171,8 +177,7 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
   );
   /**
    * Add YouTube video transcript
-   */
-  const addYoutubeVideo = useCallback(async (): Promise<void> => {
+   */ const addYoutubeVideo = useCallback(async (): Promise<void> => {
     if (!youtubeUrl.trim()) return;
 
     // Validate URL
@@ -195,8 +200,7 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       type: "video/youtube",
       status: "processing",
       progress: 0,
-      processingStage: 'validating',
-      metadata: { videoId: validation.videoId }
+      metadata: { videoId: validation.videoId },
     };
 
     setFiles((prev) => [...prev, newFile]);
@@ -204,15 +208,19 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
     try {
       // Process YouTube video to file
       NotificationService.youtube.startProcessing(youtubeUrl, fileId);
-      updateProcessingStage(fileId, 'fetching', 0);
+      updateProcessingStage(fileId, "fetching", 0);
 
       const result = await YouTubeTranscriptService.processYouTubeToFile(
         youtubeUrl,
         {
           onProcessingUpdate: (stage, progress) => {
             updateFile(fileId, { progress });
-            NotificationService.youtube.updateProcessing(progress, stage, fileId);
-          }
+            NotificationService.youtube.updateProcessing(
+              progress,
+              stage,
+              fileId
+            );
+          },
         }
       );
 
@@ -225,40 +233,41 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
         metadata: {
           ...result.metadata,
           wordCount: result.metadata.transcript.split(/\s+/).length,
-          charCount: result.metadata.transcript.length
-        }
+          charCount: result.metadata.transcript.length,
+        },
       });
 
       NotificationService.youtube.processingComplete(fileId);
 
       // Start upload phase
-      updateFile(fileId, { 
-        status: "uploading", 
+      updateFile(fileId, {
+        status: "uploading",
         progress: 0,
-        processingStage: 'uploading'
       });
-
       NotificationService.youtube.startUpload(fileId);
 
-      const uploadedFile = await DocumentStorageService.uploadFile(result.file, {
-        bucketId: BUCKET_ID,
-        onProgress: (progress) => {
-          updateFile(fileId, { progress: progress.progress });
-          NotificationService.youtube.updateUpload(progress.progress, fileId);
+      const uploadedFile = await DocumentStorageService.uploadFile(
+        result.file,
+        {
+          bucketId: BUCKET_ID,
+          onProgress: (progress) => {
+            const currentProgress = Math.round(progress.progress || 0);
+              updateFile(fileId, { progress: currentProgress });
+              NotificationService.youtube.updateUpload(currentProgress, fileId);
+            }
         },
-      });
+        user?.$id
+      );
 
       // Upload complete
       updateFile(fileId, {
         status: "completed",
         appwriteId: uploadedFile.$id,
-        processingStage: 'completed',
-        progress: 100
+        progress: 100,
       });
 
       NotificationService.youtube.uploadComplete(fileId);
       setYoutubeUrl("");
-
     } catch (error: any) {
       console.error("Failed to process YouTube video:", error);
       const errorMessage = error.message || "Failed to process YouTube video";
@@ -276,8 +285,7 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
   }, [youtubeUrl, updateFile, updateProcessingStage]);
   /**
    * Add text content as file
-   */
-  const addTextContent = useCallback(async (): Promise<void> => {
+   */ const addTextContent = useCallback(async (): Promise<void> => {
     if (!textContent.trim()) return;
 
     // Validate content
@@ -295,7 +303,7 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
     try {
       // Process text to file
       const result = TextContentService.processTextToFile(textContent, {
-        addTimestamp: true
+        addTimestamp: true,
       });
 
       // Create file entry
@@ -306,42 +314,47 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
         type: "text/plain",
         status: "uploading",
         progress: 0,
-        processingStage: 'uploading',
+        processingStage: "uploading",
         metadata: {
           wordCount: result.stats.wordCount,
-          charCount: result.stats.charCount
-        }
+          charCount: result.stats.charCount,
+        },
       };
 
-      setFiles((prev) => [...prev, newFile]);
-
-      // Start upload
+      setFiles((prev) => [...prev, newFile]); // Start upload
       NotificationService.textContent.startUpload(fileId);
 
-      const uploadedFile = await DocumentStorageService.uploadFile(result.file, {
-        bucketId: BUCKET_ID,
-        onProgress: (progress) => {
-          updateFile(fileId, { progress: progress.progress });
-          NotificationService.textContent.updateUpload(progress.progress, fileId);
+      const uploadedFile = await DocumentStorageService.uploadFile(
+        result.file,
+        {
+          bucketId: BUCKET_ID,
+          onProgress: (progress) => {
+            const currentProgress = Math.round(progress.progress || 0);           
+              updateFile(fileId, { progress: currentProgress });
+              NotificationService.textContent.updateUpload(
+                currentProgress,
+                fileId
+              );
+            }
         },
-      });
+        user?.$id
+      );
 
       // Upload complete
       updateFile(fileId, {
         status: "completed",
         appwriteId: uploadedFile.$id,
-        processingStage: 'completed',
-        progress: 100
+        processingStage: "completed",
+        progress: 100,
       });
 
       NotificationService.textContent.uploadComplete(fileId);
       setTextContent("");
-
     } catch (error: any) {
       console.error("Failed to process text content:", error);
       const errorMessage = error.message || "Failed to process text content";
 
-      if (files.find(f => f.id === fileId)) {
+      if (files.find((f) => f.id === fileId)) {
         updateFile(fileId, {
           status: "error",
           error: errorMessage,
@@ -368,22 +381,25 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
   /**
    * Retry failed upload
    */
-  const retry = useCallback(async (fileId: string): Promise<void> => {
-    const file = files.find(f => f.id === fileId);
-    if (!file || file.status !== 'error') return;
+  const retry = useCallback(
+    async (fileId: string): Promise<void> => {
+      const file = files.find((f) => f.id === fileId);
+      if (!file || file.status !== "error") return;
 
-    // Reset file status
-    updateFile(fileId, { 
-      status: 'uploading', 
-      progress: 0, 
-      error: undefined,
-      processingStage: 'uploading'
-    });
+      // Reset file status
+      updateFile(fileId, {
+        status: "uploading",
+        progress: 0,
+        error: undefined,
+        processingStage: "uploading",
+      });
 
-    // TODO: Implement retry logic based on file type
-    // This would require storing original file data or re-processing
-    NotificationService.info(`Retry functionality for ${file.name} not yet implemented`);
-  }, [files, updateFile]);
+      // TODO: Implement retry logic based on file type
+      // This would require storing original file data or re-processing
+      // NotificationService.info(`Retry functionality for ${file.name} not yet implemented`);
+    },
+    [files, updateFile]
+  );
 
   return {
     // State
@@ -393,7 +409,7 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
     error,
     isProcessing,
     totalProgress,
-    
+
     // Actions
     setYoutubeUrl,
     setTextContent,

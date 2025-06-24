@@ -121,27 +121,6 @@ export function useUploadManager(): UploadManagerState & UploadManagerActions {
       setIsProcessing(true);
       setError("");
 
-      // Validate files (especially important for large files)
-      const validatedFiles = acceptedFiles.map((file) => {
-        const validation = DocumentStorageService.validateFile(file);
-        return { file, validation };
-      });
-
-      const invalidFiles = validatedFiles.filter(
-        ({ validation }) => !validation.isValid
-      );
-      if (invalidFiles.length > 0) {
-        const errorMessage = invalidFiles
-          .map(({ file, validation }) => `${file.name}: ${validation.error}`)
-          .join(", ");
-        setError(errorMessage);
-        NotificationService.error("Some files are invalid", {
-          description: errorMessage,
-        });
-        setIsProcessing(false);
-        return;
-      }
-
       // Create file entries
       const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
         id: ID.unique(),

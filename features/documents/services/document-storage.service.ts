@@ -4,7 +4,7 @@ import { FileListOptions, FileUploadOptions } from "../types";
 
 export class DocumentStorageService {
   /**
-   * Upload a file to Appwrite storage with enhanced progress tracking for large files
+   * Upload a file to Appwrite storage
    */
   static async uploadFile(
     file: File,
@@ -13,54 +13,24 @@ export class DocumentStorageService {
   ): Promise<Models.File> {
     try {
       const fileId = options.fileId || ID.unique();
-      
-      // Set default permissions if none provided and user ID is available
+
+      //  Set default permissions if none provided and user ID is available
       let permissions = options.permissions;
       if (!permissions && userId) {
         permissions = this.createUserPermissions(userId);
       }
 
-      // Enhanced progress tracking for large files
-      let lastProgress = 0;
-      const progressCallback = options.onProgress ? (progressEvent: any) => {
-        try {
-          // Ensure progress is between 0-100 and only increases
-          const currentProgress = Math.min(100, Math.max(0, Math.round(progressEvent.progress || 0)));
-          
-          // Only update if progress actually increased (to handle chunked uploads)
-          if (currentProgress > lastProgress || currentProgress === 100) {
-            lastProgress = currentProgress;
-            options.onProgress!({
-              ...progressEvent,
-              progress: currentProgress
-            });
-          }
-        } catch (error) {
-          console.warn('Progress callback error:', error);
-        }
-      } : undefined;
-
       const response = await storage.createFile(
         options.bucketId,
         fileId,
         file,
-        permissions,
-        progressCallback
+        options.permissions,
+        options.onProgress
       );
 
       return response;
     } catch (error) {
       if (error instanceof AppwriteException) {
-        // Provide more specific error messages for common issues
-        if (error.code === 413) {
-          throw new Error(`File too large: ${error.message}`);
-        }
-        if (error.code === 400) {
-          throw new Error(`Invalid file: ${error.message}`);
-        }
-        if (error.code === 429) {
-          throw new Error(`Rate limit exceeded. Please try again later.`);
-        }
         throw new Error(`Upload failed: ${error.message}`);
       }
       throw new Error("Upload failed: Unknown error");
@@ -187,44 +157,6 @@ export class DocumentStorageService {
   }
 
   /**
-   * Validate file type and size
-   */
-  static validateFile(
-    file: File,
-    allowedTypes?: string[],
-    maxSize?: number
-  ): { isValid: boolean; error?: string } {
-    // Check file size (default 10MB)
-    const maxFileSize = maxSize || 30 * 1024 * 1024;
-    if (file.size > maxFileSize) {
-      return {
-        isValid: false,
-        error: `File size must be less than ${this.formatFileSize(
-          maxFileSize
-        )}`,
-      };
-    }
-
-    // Check file type
-    if (allowedTypes && allowedTypes.length > 0) {
-      const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
-      const mimeTypeAllowed = allowedTypes.includes(file.type);
-      const extensionAllowed = allowedTypes.includes(fileExtension);
-
-      if (!mimeTypeAllowed && !extensionAllowed) {
-        return {
-          isValid: false,
-          error: `File type not allowed. Allowed types: ${allowedTypes.join(
-            ", "
-          )}`,
-        };
-      }
-    }
-
-    return { isValid: true };
-  }
-
-  /**
    * Get file type icon based on file extension or MIME type
    */
   static getFileTypeIcon(file: Models.File): string {
@@ -259,8 +191,7 @@ export class DocumentStorageService {
     return "📁";
   }
 
-  /**
-   * Create user-specific permissions for file access
+  /** * Create user-specific permissions for file access
    */
   static createUserPermissions(userId: string): string[] {
     return [
